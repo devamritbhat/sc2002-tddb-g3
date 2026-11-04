@@ -1,0 +1,288 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+package app {
+
+    class RestaurantRushApp {
+        +main(args: String[]): void
+    }
+}
+
+package boundary {
+
+    class RestaurantUI <<boundary>> {
+        -controller: GameController
+
+        +run(): void
+        -handleWaiterAction(): void
+        -handleChefAction(): void
+        -showState(): void
+        -showFinalResult(): void
+    }
+}
+
+package control {
+
+    class GameController <<control>> {
+        -currentTurn: int
+        -nextCustomerId: int
+        -nextOrderId: int
+        -waiterTaskUsed: boolean
+        -chefTaskUsed: boolean
+
+        +startNextTurn(): void
+        +processArrival(): Customer
+
+        +seatCustomer(customer: Customer): ActionResult
+        +takeOrder(customer: Customer): ActionResult
+        +serveOrder(order: Order): ActionResult
+        +prepareOrder(order: Order): ActionResult
+
+        +waiterWait(): ActionResult
+        +chefWait(): ActionResult
+
+        +processEatingAndPayment(): ActionResult
+        +processSatisfactionAndAbandonment(): void
+
+        +hasWon(): boolean
+        +isGameOver(): boolean
+    }
+
+    class GameConfig <<control>> {
+        -maxTurns: int
+        -tableCount: int
+        -minPaidCustomers: int
+        -minRevenueCents: int
+        -minAverageSatisfaction: int
+    }
+
+    class ArrivalSchedule <<control>> {
+        -arrivalTurns: int[]
+
+        +hasArrival(turn: int): boolean
+    }
+}
+
+package domain {
+
+    abstract class Customer <<entity>> {
+        -id: int
+        -arrivalTurn: int
+        -satisfaction: int
+        -status: CustomerStatus
+        -table: Table
+        -order: Order
+
+        +loseSatisfaction(): void
+        {abstract} +getSatisfactionLossPerTurn(): int
+    }
+
+    class RegularCustomer <<entity>> {
+        {static} -SATISFACTION_LOSS: int = 8
+
+        +getSatisfactionLossPerTurn(): int
+    }
+
+    class Restaurant <<entity>> {
+        -waitingQueue: WaitingQueue
+        -tables: List<Table>
+        -customers: List<Customer>
+        -orders: List<Order>
+        -menu: Menu
+        -stats: GameStats
+
+        +addCustomer(customer: Customer): void
+        +addOrder(order: Order): void
+
+        +findFreeTable(): Table
+        +findReadyOrders(): List<Order>
+        +findReadyToPayCustomers(): List<Customer>
+    }
+
+    class WaitingQueue <<entity>> {
+        -customers: Queue<Customer>
+
+        +add(customer: Customer): void
+        +remove(customer: Customer): boolean
+    }
+
+    class Table <<entity>> {
+        -tableId: int
+        -occupant: Customer
+
+        +isFree(): boolean
+        +seat(customer: Customer): void
+        +release(): void
+    }
+
+    class Menu <<entity>> {
+        -items: List<MenuItem>
+
+        +chooseItemFor(customer: Customer): MenuItem
+    }
+
+    class MenuItem <<entity>> {
+        -name: String
+        -priceCents: int
+        -preparationUnits: int
+    }
+
+    class Order <<entity>> {
+        -orderId: int
+        -customer: Customer
+        -item: MenuItem
+
+        -status: OrderStatus
+        -remainingPreparationUnits: int
+        -billCents: int
+
+        -readyTurn: int
+        -servedTurn: int
+        -readyToPayTurn: int
+
+        +prepareOneUnit(currentTurn: int): void
+        +markServed(turn: int): void
+        +markReadyToPay(turn: int): void
+        +markPaid(): void
+        +cancel(): void
+    }
+
+    class Waiter <<entity>> {
+        +seatCustomer(customer: Customer, table: Table): ActionResult
+        +takeOrder(customer: Customer, item: MenuItem, orderId: int): ActionResult
+        +serveOrder(order: Order, turn: int): ActionResult
+    }
+
+    class Chef <<entity>> {
+        +prepare(order: Order, currentTurn: int): ActionResult
+    }
+
+    class Cashier <<entity>> {
+        +processNextPayment(restaurant: Restaurant, currentTurn: int): ActionResult
+    }
+
+    class GameStats <<entity>> {
+        -revenueCents: int
+        -paidCount: int
+        -paidSatisfactionTotal: int
+        -servedCount: int
+        -unhappyDepartures: int
+
+        +recordPayment(customer: Customer, billCents: int): void
+
+        +recordServed(): void
+        +recordDeparture(): void
+        +getAveragePaidSatisfaction(): double
+    }
+}
+
+package support {
+
+    enum CustomerStatus {
+        WAITING
+        SEATED
+        ORDERED
+        SERVED
+        READY_TO_PAY
+        PAID
+        LEFT
+    }
+
+    enum OrderStatus {
+        PLACED
+        PREPARING
+        READY
+        SERVED
+        READY_TO_PAY
+        PAID
+        CANCELLED
+    }
+
+    class ActionResult {
+        -success: boolean
+        -message: String
+    }
+}
+
+' Application flow
+RestaurantRushApp --> RestaurantUI
+RestaurantRushApp --> GameController
+
+RestaurantUI --> GameController
+
+' Controller structure
+GameController *-- GameConfig
+GameConfig *-- ArrivalSchedule
+
+GameController *-- Restaurant
+GameController *-- Waiter
+GameController *-- Chef
+GameController *-- Cashier
+
+' Restaurant structure
+Restaurant *-- "1" WaitingQueue
+Restaurant *-- "2" Table
+Restaurant *-- "1" Menu
+Restaurant *-- "1" GameStats
+
+Restaurant o-- "0..*" Customer
+Restaurant o-- "0..*" Order
+
+WaitingQueue o-- "0..*" Customer
+Menu *-- "3" MenuItem
+
+' Core domain relationships
+Customer <|-- RegularCustomer
+
+Customer --> "0..1" Table
+Customer --> "0..1" Order
+
+Order --> "1" Customer
+Order --> "1" MenuItem
+
+Customer --> CustomerStatus
+Order --> OrderStatus
+
+' Staff relationships
+Waiter --> Customer
+Waiter --> Table
+Waiter --> Order
+
+Chef --> Order
+
+Cashier --> Restaurant
+
+note right of Customer
+Polymorphism:
+each customer type defines
+its satisfaction loss.
+end note
+
+note right of Restaurant
+Main aggregate containing
+restaurant state.
+end note
+
+note right of Order
+Stores lifecycle timing:
+READY, SERVED and
+READY_TO_PAY turns.
+end note
+
+note left of Order
+Encapsulation:
+order lifecycle state is private
+and changed through controlled
+operations.
+end note
+
+note left of Restaurant
+Composition:
+Restaurant owns its tables,
+waiting queue, menu and stats.
+end note
+
+@enduml
