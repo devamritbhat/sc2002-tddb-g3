@@ -249,25 +249,51 @@ java -cp out Stage1SimulationTest defeat
 
 # Test Evidence
 
-Reproducible test runs are stored in:
+Both runs use the base setting. Since the game has no randomness, the results are reproducible. Customers order by ID: 1 and 4 choose Salad, 2 and 5 choose Burger, and 3 and 6 choose Pasta. Each customer places the order matching their ID.
 
-```text
-docs/test-runs/
-```
+Each run can be reproduced using:
+
+- Automated simulation: Runs through `GameController` and saves a summary of each turn.
+- Input file: Replays the same choices through the game menus.
 
 ## Victory Run
 
-The automated victory simulation completes all 18 turns with:
+| Turn | Waiter | Chef |
+|---|---|---|
+| 1 | Seat Customer 1 | Wait |
+| 2 | Take order from Customer 1 | Prepare Order 1 |
+| 3 | Serve Order 1 | Wait |
+| 4 | Seat Customer 2 | Wait |
+| 5 | Take order from Customer 2 | Prepare Order 2 |
+| 6 | Serve Order 2 | Wait |
+| 7 | Seat Customer 3 | Wait |
+| 8 | Take order from Customer 3 | Prepare Order 3 |
+| 9 | Wait | Prepare Order 3 |
+| 10 | Seat Customer 4 | Wait |
+| 11 | Serve Order 3 | Wait |
+| 12 | Take order from Customer 4 | Prepare Order 4 |
+| 13 | Serve Order 4 | Wait |
+| 14 | Seat Customer 5 | Wait |
+| 15 | Take order from Customer 5 | Prepare Order 5 |
+| 16–18 | Wait | Wait |
+
+Result: **VICTORY**
 
 ```text
-Paid customers: 4
-Revenue: $51.00
-Average satisfaction: 78.00
+Paid customers: 4          (target: at least 4)
+Revenue: $51.00            (target: at least $45)
+Average satisfaction: 78.00 (target: at least 60)
+Unhappy departures: 0
 ```
 
-This satisfies all current victory requirements.
+Reproduce:
 
-The complete output is stored in:
+```bash
+java -cp out Stage1SimulationTest victory
+java -cp out app.RestaurantRushApp < docs/test-runs/victory-input.txt
+```
+
+Saved output:
 
 ```text
 docs/test-runs/victory-run.txt
