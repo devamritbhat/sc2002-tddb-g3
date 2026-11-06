@@ -161,11 +161,14 @@ sc2002-tddb-g3/
 │
 ├── docs/
 │   ├── uml/
-│   │   └── class-diagram.png
+│   │   ├── class-diagram.png
+│   │   └── class-diagram.puml
 │   │
 │   └── test-runs/
 │       ├── victory-run.txt
-│       └── defeat-run.txt
+│       ├── victory-input.txt
+│       ├── defeat-run.txt
+│       └── defeat-input.txt
 │
 └── out/
 ```
@@ -249,12 +252,7 @@ java -cp out Stage1SimulationTest defeat
 
 # Test Evidence
 
-Both runs use the base setting. Since the game has no randomness, the results are reproducible. Customers order by ID: 1 and 4 choose Salad, 2 and 5 choose Burger, and 3 and 6 choose Pasta. Each customer places the order matching their ID.
-
-Each run can be reproduced using:
-
-- Automated simulation: Runs through `GameController` and saves a summary of each turn.
-- Input file: Replays the same choices through the game menus.
+Both runs use the base setting. Since the game has no randomness, the results are reproducible. Customers order by ID: 1 and 4 choose Salad, 2 and 5 choose Burger, and 3 and 6 choose Pasta.
 
 ## Victory Run
 
@@ -289,7 +287,6 @@ Unhappy departures: 0
 Reproduce:
 
 ```bash
-java -cp out Stage1SimulationTest victory
 java -cp out app.RestaurantRushApp < docs/test-runs/victory-input.txt
 ```
 
@@ -301,22 +298,35 @@ docs/test-runs/victory-run.txt
 
 ## Defeat Run
 
-The automated defeat scenario makes the Waiter and Chef wait throughout the game.
+The Waiter and Chef wait every turn, so no customers get seated. Waiting customers lose 8 satisfaction each turn. Customer 1 leaves after Turn 13, followed by Customer 2 after Turn 16.
 
-The simulation completes all 18 turns with:
+Result: **DEFEAT**
 
 ```text
-Paid customers: 0
-Revenue: $0.00
+Paid customers: 0          (target: at least 4)
+Revenue: $0.00             (target: at least $45)
+Average satisfaction: N/A
+Unhappy departures: 2
 ```
 
-and therefore results in defeat.
+Reproduce:
 
-The complete output is stored in:
+```bash
+java -cp out app.RestaurantRushApp < docs/test-runs/defeat-input.txt
+```
+
+Saved output:
 
 ```text
 docs/test-runs/defeat-run.txt
 ```
+
+## Input File Format
+
+Each line of an input file is one menu entry, in the order the game asks for them:
+
+- Waiter: `1` seat, `2` take order or `3` serve, followed by the customer ID or order ID; `4` wait
+- Chef: `1` prepare, followed by the order ID; `2` wait
 
 ---
 
