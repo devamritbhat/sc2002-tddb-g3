@@ -109,7 +109,6 @@ public class Restaurant {
 
             if (order != null
                     && order.getStatus() == OrderStatus.READY_TO_PAY) {
-
                 readyCustomers.add(customer);
             }
         }

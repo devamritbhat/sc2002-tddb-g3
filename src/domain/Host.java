@@ -24,9 +24,6 @@ public class Host {
         table.seat(customer);
         customer.setStatus(CustomerStatus.SEATED);
 
-        return ActionResult.success(
-                "Host seated Customer " + customer.getId()
-                        + " at Table " + table.getTableId() + "."
-        );
+        return ActionResult.success("Host seated Customer " + customer.getId()+ " at Table " + table.getTableId() + ".");
     }
 }

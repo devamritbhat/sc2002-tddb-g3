@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// Stores the available menu items.
+// Stores the available menu items
 public class Menu {
 
     private final List<MenuItem> items;
@@ -13,7 +13,7 @@ public class Menu {
 
         items = new ArrayList<>();
 
-        // Base menu items.
+        // Base menu items
         MenuItem salad = new MenuItem("Salad", 900, 1);
         MenuItem burger = new MenuItem("Burger", 1500, 1);
         MenuItem pasta = new MenuItem("Pasta", 1800, 2);

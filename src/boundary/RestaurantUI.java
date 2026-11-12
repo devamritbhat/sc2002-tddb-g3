@@ -56,10 +56,7 @@ public class RestaurantUI {
             Customer arrival = controller.processArrival();
 
             if (arrival != null) {
-                System.out.println(
-                        describe(arrival)
-                                + " has arrived."
-                );
+                System.out.println( describe(arrival) + " has arrived." );
             }
 
             // The Host seats the first waiting customer automatically.
@@ -77,8 +74,7 @@ public class RestaurantUI {
             handleChefAction();
 
             // Step 4: Eating and automatic payment.
-            ActionResult payment =
-                    controller.processEatingAndPayment();
+            ActionResult payment = controller.processEatingAndPayment();
 
             if (payment.isSuccess()) {
                 System.out.println(payment.getMessage());
@@ -98,39 +94,23 @@ public class RestaurantUI {
     // Displays the current restaurant state.
     private void showState() {
 
-        Restaurant restaurant =
-                controller.getRestaurant();
+        Restaurant restaurant = controller.getRestaurant();
 
-        GameStats stats =
-                restaurant.getStats();
+        GameStats stats = restaurant.getStats();
 
         System.out.println();
         System.out.println("----- Restaurant Status -----");
 
-        System.out.println(
-                "Revenue: "
-                        + formatMoney(
-                                stats.getRevenueCents()
-                        )
-        );
+        System.out.println("Revenue: " + formatMoney(stats.getRevenueCents()));
 
         if (stats.getPaidCount() == 0) {
-            System.out.println(
-                    "Average satisfaction: N/A"
-            );
-        } else {
-            System.out.printf(
-                    "Average satisfaction: %.2f%n",
-                    stats.getAveragePaidSatisfaction()
-            );
+            System.out.println("Average satisfaction: N/A");
+        } 
+        else {
+            System.out.printf("Average satisfaction: %.2f%n", stats.getAveragePaidSatisfaction());
         }
 
-        System.out.println(
-                "Happy Hour: "
-                        + describeHappyHour(
-                                restaurant.getHappyHour()
-                        )
-        );
+        System.out.println("Happy Hour: " + describeHappyHour(restaurant.getHappyHour()));
 
         System.out.println();
         System.out.println("Staff Tasks Available:");
@@ -148,10 +128,7 @@ public class RestaurantUI {
     // Displays customers currently waiting for tables.
     private void showWaitingQueue() {
 
-        List<Customer> customers =
-                controller.getRestaurant()
-                        .getWaitingQueue()
-                        .getCustomers();
+        List<Customer> customers = controller.getRestaurant().getWaitingQueue().getCustomers();
 
         System.out.println();
         System.out.println("Waiting Queue:");
@@ -162,11 +139,7 @@ public class RestaurantUI {
         }
 
         for (Customer customer : customers) {
-            System.out.println(
-                    describe(customer)
-                            + " | Satisfaction: "
-                            + customer.getSatisfaction()
-            );
+            System.out.println(describe(customer) + " | Satisfaction: " + customer.getSatisfaction());
         }
     }
 
@@ -176,25 +149,13 @@ public class RestaurantUI {
         System.out.println();
         System.out.println("Tables:");
 
-        for (Table table :
-                controller.getRestaurant()
-                        .getTables()) {
+        for (Table table : controller.getRestaurant().getTables()) {
 
             if (table.isFree()) {
-
-                System.out.println(
-                        "Table " + table.getTableId()
-                                + ": Free"
-                );
+                System.out.println("Table " + table.getTableId() + ": Free");
 
             } else {
-
-                System.out.println(
-                        "Table " + table.getTableId()
-                                + ": Customer "
-                                + table.getOccupant()
-                                        .getId()
-                );
+                System.out.println("Table " + table.getTableId() + ": Customer " + table.getOccupant().getId());
             }
         }
     }
@@ -202,9 +163,7 @@ public class RestaurantUI {
     // Displays all customers and their current states.
     private void showCustomers() {
 
-        List<Customer> customers =
-                controller.getRestaurant()
-                        .getCustomers();
+        List<Customer> customers = controller.getRestaurant().getCustomers();
 
         System.out.println();
         System.out.println("Customers:");
@@ -216,22 +175,15 @@ public class RestaurantUI {
 
         for (Customer customer : customers) {
 
-            System.out.println(
-                    describe(customer)
-                            + " | "
-                            + customer.getStatus()
-                            + " | Satisfaction: "
-                            + customer.getSatisfaction()
-            );
+            System.out.println(describe(customer) + " | " + customer.getStatus()
+                    + " | Satisfaction: " + customer.getSatisfaction());
         }
     }
 
     // Displays all current orders.
     private void showOrders() {
 
-        List<Order> orders =
-                controller.getRestaurant()
-                        .getOrders();
+        List<Order> orders = controller.getRestaurant().getOrders();
 
         System.out.println();
         System.out.println("Orders:");
@@ -243,22 +195,14 @@ public class RestaurantUI {
 
         for (Order order : orders) {
 
-            System.out.println(
-                    "Order " + order.getOrderId()
-                            + " | Customer "
-                            + order.getCustomer().getId()
-                            + " | "
-                            + order.getItem().getName()
-                            + " | "
-                            + order.getStatus()
-                            + " | Remaining units: "
-                            + order.getRemainingPreparationUnits()
-                            + " | Bill: "
-                            + formatMoney(order.getBillCents())
-                            + (order.isHappyHourPrice()
-                                    ? " (Happy Hour)"
-                                    : "")
-            );
+            System.out.printf("Order %d | Customer %d | %s | %s | Remaining units: %d | Bill: %s%s%n",
+                    order.getOrderId(),
+                    order.getCustomer().getId(),
+                    order.getItem().getName(),
+                    order.getStatus(),
+                    order.getRemainingPreparationUnits(),
+                    formatMoney(order.getBillCents()),
+                    order.isHappyHourPrice() ? " (Happy Hour)" : "");
         }
     }
 
@@ -268,27 +212,17 @@ public class RestaurantUI {
         System.out.println();
         System.out.println("Menu:");
 
-        for (MenuItem item :
-                controller.getRestaurant()
-                        .getMenu()
-                        .getItems()) {
+        for (MenuItem item : controller.getRestaurant().getMenu().getItems()) {
 
-            System.out.println(
-                    item.getName()
-                            + " | "
-                            + formatMoney(item.getPriceCents())
-                            + " | Preparation units: "
-                            + item.getPreparationUnits()
-            );
+            System.out.printf("%s | %s | Preparation units: %d%n",
+                    item.getName(), formatMoney(item.getPriceCents()), item.getPreparationUnits());
         }
     }
 
     // Asks whether to start Happy Hour, while it is still available.
     private void handleHappyHour() {
 
-        if (!controller.getRestaurant()
-                .getHappyHour()
-                .canActivate()) {
+        if (!controller.getRestaurant().getHappyHour().canActivate()) {
             return;
         }
 
@@ -299,14 +233,10 @@ public class RestaurantUI {
             System.out.println("1. Start Happy Hour");
             System.out.println("2. Not now");
 
-            int choice =
-                    readInt("Choose: ");
+            int choice = readInt("Choose: ");
 
             if (choice == 1) {
-                System.out.println(
-                        controller.activateHappyHour()
-                                .getMessage()
-                );
+                System.out.println(controller.activateHappyHour().getMessage());
                 return;
             }
 
@@ -314,9 +244,7 @@ public class RestaurantUI {
                 return;
             }
 
-            System.out.println(
-                    "Invalid choice. Try again."
-            );
+            System.out.println("Invalid choice. Try again.");
         }
     }
 
@@ -329,9 +257,7 @@ public class RestaurantUI {
                     : "ACTIVE (1 turn left: this turn)";
         }
 
-        return happyHour.isUsed()
-                ? "used"
-                : "available";
+        return happyHour.isUsed() ? "used" : "available";
     }
 
     // Lets the manager choose one Waiter task.
@@ -348,43 +274,33 @@ public class RestaurantUI {
             System.out.println("3. Serve order");
             System.out.println("4. Wait");
 
-            int choice =
-                    readInt("Choose Waiter task: ");
+            int choice = readInt("Choose Waiter task: ");
 
             switch (choice) {
 
                 case 1:
-                    actionComplete =
-                            chooseCustomerToSeat();
+                    actionComplete = chooseCustomerToSeat();
                     break;
 
                 case 2:
-                    actionComplete =
-                            chooseCustomerForOrder();
+                    actionComplete = chooseCustomerForOrder();
                     break;
 
                 case 3:
-                    actionComplete =
-                            chooseOrderToServe();
+                    actionComplete = chooseOrderToServe();
                     break;
 
                 case 4:
-                    ActionResult waiterWait =
-                            controller.waiterWait();
+                    ActionResult waiterWait = controller.waiterWait();
 
-                    System.out.println(
-                            waiterWait.getMessage()
-                    );
+                    System.out.println(waiterWait.getMessage());
 
-                    actionComplete =
-                            waiterWait.isSuccess();
+                    actionComplete = waiterWait.isSuccess();
 
                     break;
 
                 default:
-                    System.out.println(
-                            "Invalid choice. Try again."
-                    );
+                    System.out.println("Invalid choice. Try again.");
             }
         }
     }
@@ -392,24 +308,16 @@ public class RestaurantUI {
     // Lets the manager choose a waiting customer to seat.
     private boolean chooseCustomerToSeat() {
 
-        List<Customer> waiting =
-                controller.getRestaurant()
-                        .getWaitingQueue()
-                        .getCustomers();
+        List<Customer> waiting = controller.getRestaurant().getWaitingQueue().getCustomers();
 
         if (waiting.isEmpty()) {
-            System.out.println(
-                    "No customers are waiting for a table."
-            );
+            System.out.println("No customers are waiting for a table.");
             return false;
         }
 
-        if (controller.getRestaurant()
-                .findFreeTable() == null) {
+        if (controller.getRestaurant().findFreeTable() == null) {
 
-            System.out.println(
-                    "No free table is available."
-            );
+            System.out.println("No free table is available.");
             return false;
         }
 
@@ -417,30 +325,19 @@ public class RestaurantUI {
         System.out.println("Waiting customers:");
 
         for (Customer customer : waiting) {
-            System.out.println(
-                    customer.getId()
-                            + ". Customer "
-                            + customer.getId()
-            );
+            System.out.println(customer.getId() + ". Customer " + customer.getId());
         }
 
-        int id =
-                readInt(
-                        "Choose customer ID to seat: "
-                );
+        int id = readInt("Choose customer ID to seat: ");
 
-        Customer selected =
-                findCustomerById(waiting, id);
+        Customer selected = findCustomerById(waiting, id);
 
         if (selected == null) {
-            System.out.println(
-                    "Invalid customer."
-            );
+            System.out.println("Invalid customer.");
             return false;
         }
 
-        ActionResult result =
-                controller.seatCustomer(selected);
+        ActionResult result = controller.seatCustomer(selected);
 
         System.out.println(result.getMessage());
 
@@ -450,13 +347,10 @@ public class RestaurantUI {
     // Lets the manager choose a customer whose order should be taken.
     private boolean chooseCustomerForOrder() {
 
-        List<Customer> customers =
-                controller.getCustomersReadyToOrder();
+        List<Customer> customers = controller.getCustomersReadyToOrder();
 
         if (customers.isEmpty()) {
-            System.out.println(
-                    "No customers are ready to order."
-            );
+            System.out.println("No customers are ready to order.");
             return false;
         }
 
@@ -464,43 +358,27 @@ public class RestaurantUI {
         System.out.println("Customers ready to order:");
 
         for (Customer customer : customers) {
-            System.out.println(
-                    customer.getId()
-                            + ". Customer "
-                            + customer.getId()
-            );
+            System.out.println(customer.getId() + ". Customer " + customer.getId());
         }
 
-        int id =
-                readInt(
-                        "Choose customer ID: "
-                );
+        int id = readInt("Choose customer ID: ");
 
-        Customer selected =
-                findCustomerById(customers, id);
+        Customer selected = findCustomerById(customers, id);
 
         if (selected == null) {
-            System.out.println(
-                    "Invalid customer."
-            );
+            System.out.println("Invalid customer.");
             return false;
         }
 
-        ActionResult result =
-                controller.takeOrder(selected);
+        ActionResult result = controller.takeOrder(selected);
 
         System.out.println(result.getMessage());
 
         if (result.isSuccess()) {
             Order order = selected.getOrder();
 
-            System.out.println(
-                    "Bill: "
-                            + formatMoney(order.getBillCents())
-                            + (order.isHappyHourPrice()
-                                    ? " (Happy Hour price)"
-                                    : "")
-            );
+            System.out.println("Bill: " + formatMoney(order.getBillCents())
+                    + (order.isHappyHourPrice() ? " (Happy Hour price)" : ""));
         }
 
         return result.isSuccess();
@@ -509,13 +387,10 @@ public class RestaurantUI {
     // Lets the manager choose a ready order to serve.
     private boolean chooseOrderToServe() {
 
-        List<Order> orders =
-                controller.getReadyOrders();
+        List<Order> orders = controller.getReadyOrders();
 
         if (orders.isEmpty()) {
-            System.out.println(
-                    "No orders are ready to serve."
-            );
+            System.out.println("No orders are ready to serve.");
             return false;
         }
 
@@ -524,33 +399,20 @@ public class RestaurantUI {
 
         for (Order order : orders) {
 
-            System.out.println(
-                    order.getOrderId()
-                            + ". Order "
-                            + order.getOrderId()
-                            + " - Customer "
-                            + order.getCustomer()
-                                    .getId()
-            );
+            System.out.printf("%d. Order %d - Customer %d%n",
+                    order.getOrderId(), order.getOrderId(), order.getCustomer().getId());
         }
 
-        int id =
-                readInt(
-                        "Choose order ID to serve: "
-                );
+        int id = readInt("Choose order ID to serve: ");
 
-        Order selected =
-                findOrderById(orders, id);
+        Order selected = findOrderById(orders, id);
 
         if (selected == null) {
-            System.out.println(
-                    "Invalid order."
-            );
+            System.out.println("Invalid order.");
             return false;
         }
 
-        ActionResult result =
-                controller.serveOrder(selected);
+        ActionResult result = controller.serveOrder(selected);
 
         System.out.println(result.getMessage());
 
@@ -564,98 +426,63 @@ public class RestaurantUI {
 
         while (!actionComplete) {
 
-            List<Order> orders =
-                    controller.getPreparableOrders();
+            List<Order> orders = controller.getPreparableOrders();
 
             System.out.println();
             System.out.println("Chef Task:");
             System.out.println("1. Prepare order");
             System.out.println("2. Wait");
 
-            int choice =
-                    readInt("Choose Chef task: ");
+            int choice = readInt("Choose Chef task: ");
 
             switch (choice) {
 
                 case 1:
 
                     if (orders.isEmpty()) {
-                        System.out.println(
-                                "No orders can be prepared."
-                        );
+                        System.out.println("No orders can be prepared.");
                         break;
                     }
 
                     System.out.println();
-                    System.out.println(
-                            "Orders available for preparation:"
-                    );
+                    System.out.println("Orders available for preparation:");
 
                     for (Order order : orders) {
 
-                        System.out.println(
-                                order.getOrderId()
-                                        + ". Order "
-                                        + order.getOrderId()
-                                        + " - "
-                                        + order.getItem()
-                                                .getName()
-                                        + " - Remaining units: "
-                                        + order
-                                                .getRemainingPreparationUnits()
-                        );
+                        System.out.printf("%d. Order %d - %s - Remaining units: %d%n",
+                                order.getOrderId(), order.getOrderId(), order.getItem().getName(),
+                                order.getRemainingPreparationUnits());
                     }
 
-                    int id =
-                            readInt(
-                                    "Choose order ID: "
-                            );
+                    int id = readInt("Choose order ID: ");
 
-                    Order selected =
-                            findOrderById(
-                                    orders,
-                                    id
-                            );
+                    Order selected = findOrderById(orders, id);
 
                     if (selected == null) {
-                        System.out.println(
-                                "Invalid order."
-                        );
+                        System.out.println("Invalid order.");
                         break;
                     }
 
-                    ActionResult result =
-                            controller.prepareOrder(
-                                    selected
-                            );
+                    ActionResult result = controller.prepareOrder(selected);
 
-                    System.out.println(
-                            result.getMessage()
-                    );
+                    System.out.println(result.getMessage());
 
-                    actionComplete =
-                            result.isSuccess();
+                    actionComplete = result.isSuccess();
 
                     break;
 
                 case 2:
 
-                    ActionResult chefWait =
-                            controller.chefWait();
+                    ActionResult chefWait = controller.chefWait();
 
-                    System.out.println(
-                            chefWait.getMessage()
-                    );
+                    System.out.println(chefWait.getMessage());
 
-                    actionComplete =
-                            chefWait.isSuccess();
+                    actionComplete = chefWait.isSuccess();
 
                     break;
 
                 default:
-                    System.out.println(
-                            "Invalid choice. Try again."
-                    );
+                    System.out.println("Invalid choice. Try again.");
             }
         }
     }
@@ -663,60 +490,33 @@ public class RestaurantUI {
     // Displays statistics after each turn.
     private void showEndOfTurnSummary() {
 
-        GameStats stats =
-                controller.getRestaurant()
-                        .getStats();
+        GameStats stats = controller.getRestaurant().getStats();
 
         System.out.println();
-        System.out.println(
-                "----- End of Turn "
-                        + controller.getCurrentTurn()
-                        + " -----"
-        );
+        System.out.println("----- End of Turn " + controller.getCurrentTurn() + " -----");
 
-        System.out.println(
-                "Served customers: "
-                        + stats.getServedCount()
-        );
+        System.out.println("Served customers: " + stats.getServedCount());
 
-        System.out.println(
-                "Unhappy departures: "
-                        + stats.getUnhappyDepartures()
-        );
+        System.out.println("Unhappy departures: " + stats.getUnhappyDepartures());
 
-        System.out.println(
-                "Paid customers: "
-                        + stats.getPaidCount()
-        );
+        System.out.println("Paid customers: " + stats.getPaidCount());
 
-        System.out.println(
-                "Revenue: "
-                        + formatMoney(
-                                stats.getRevenueCents()
-                        )
-        );
+        System.out.println("Revenue: " + formatMoney(stats.getRevenueCents()));
 
         if (stats.getPaidCount() == 0) {
 
-            System.out.println(
-                    "Average satisfaction: N/A"
-            );
+            System.out.println("Average satisfaction: N/A");
 
         } else {
 
-            System.out.printf(
-                    "Average satisfaction: %.2f%n",
-                    stats.getAveragePaidSatisfaction()
-            );
+            System.out.printf("Average satisfaction: %.2f%n", stats.getAveragePaidSatisfaction());
         }
     }
 
     // Displays the final victory or defeat result.
     private void showFinalResult() {
 
-        GameStats stats =
-                controller.getRestaurant()
-                        .getStats();
+        GameStats stats = controller.getRestaurant().getStats();
 
         System.out.println();
         System.out.println("================================");
@@ -729,52 +529,28 @@ public class RestaurantUI {
             System.out.println("DEFEAT!");
         }
 
-        System.out.println(
-                "Turns used: "
-                        + controller.getCurrentTurn()
-        );
+        System.out.println("Turns used: " + controller.getCurrentTurn());
 
-        System.out.println(
-                "Paid customers: "
-                        + stats.getPaidCount()
-        );
+        System.out.println("Paid customers: " + stats.getPaidCount());
 
-        System.out.println(
-                "Served customers: "
-                        + stats.getServedCount()
-        );
+        System.out.println("Served customers: " + stats.getServedCount());
 
-        System.out.println(
-                "Unhappy departures: "
-                        + stats.getUnhappyDepartures()
-        );
+        System.out.println("Unhappy departures: " + stats.getUnhappyDepartures());
 
-        System.out.println(
-                "Revenue: "
-                        + formatMoney(
-                                stats.getRevenueCents()
-                        )
-        );
+        System.out.println("Revenue: " + formatMoney(stats.getRevenueCents()));
 
         if (stats.getPaidCount() == 0) {
 
-            System.out.println(
-                    "Average satisfaction: N/A"
-            );
+            System.out.println("Average satisfaction: N/A");
 
         } else {
 
-            System.out.printf(
-                    "Average satisfaction: %.2f%n",
-                    stats.getAveragePaidSatisfaction()
-            );
+            System.out.printf("Average satisfaction: %.2f%n", stats.getAveragePaidSatisfaction());
         }
     }
 
     // Finds a customer from a displayed list.
-    private Customer findCustomerById(
-            List<Customer> customers,
-            int id) {
+    private Customer findCustomerById(List<Customer> customers, int id) {
 
         for (Customer customer : customers) {
 
@@ -787,9 +563,7 @@ public class RestaurantUI {
     }
 
     // Finds an order from a displayed list.
-    private Order findOrderById(
-            List<Order> orders,
-            int id) {
+    private Order findOrderById(List<Order> orders, int id) {
 
         for (Order order : orders) {
 
@@ -814,9 +588,7 @@ public class RestaurantUI {
                 return value;
             }
 
-            System.out.println(
-                    "Please enter a valid number."
-            );
+            System.out.println("Please enter a valid number.");
 
             scanner.nextLine();
         }
@@ -824,16 +596,12 @@ public class RestaurantUI {
 
     // Shows a customer with their type.
     private String describe(Customer customer) {
-        return "Customer " + customer.getId()
-                + " (" + customer.getTypeName() + ")";
+        return "Customer " + customer.getId() + " (" + customer.getTypeName() + ")";
     }
 
     // Formats integer cents as dollars.
     private String formatMoney(int cents) {
 
-        return String.format(
-                "$%.2f",
-                cents / 100.0
-        );
+        return String.format("$%.2f", cents / 100.0);
     }
 }

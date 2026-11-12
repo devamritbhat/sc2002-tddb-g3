@@ -77,10 +77,6 @@ public class Waiter {
         Customer customer = order.getCustomer();
         customer.setStatus(CustomerStatus.SERVED);
 
-        return ActionResult.success(
-                "Order " + order.getOrderId()
-                        + " served to Customer "
-                        + customer.getId() + "."
-        );
+        return ActionResult.success("Order " + order.getOrderId() + " served to Customer " + customer.getId() + ".");
     }
 }

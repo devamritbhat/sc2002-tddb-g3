@@ -41,8 +41,7 @@ public class GameController {
 
         this.config = config;
 
-        restaurant =
-                new Restaurant(config.getTableCount());
+        restaurant = new Restaurant(config.getTableCount());
 
         waiter = new Waiter();
         host = new Host();
@@ -99,16 +98,12 @@ public class GameController {
         HappyHour happyHour = restaurant.getHappyHour();
 
         if (!happyHour.canActivate()) {
-            return ActionResult.failure(
-                    "Happy Hour has already been used."
-            );
+            return ActionResult.failure("Happy Hour has already been used.");
         }
 
         happyHour.activate();
 
-        return ActionResult.success(
-                "Happy Hour is on for this turn and the next."
-        );
+        return ActionResult.success("Happy Hour is on for this turn and the next.");
     }
 
     // At the start of an active turn, customers waiting for a table or food recover satisfaction.
@@ -117,67 +112,50 @@ public class GameController {
         HappyHour happyHour = restaurant.getHappyHour();
 
         if (!happyHour.isActive()) {
-            return ActionResult.failure(
-                    "Happy Hour is not active."
-            );
+            return ActionResult.failure("Happy Hour is not active.");
         }
 
-        for (Customer customer :
-                restaurant.getCustomers()) {
+        for (Customer customer : restaurant.getCustomers()) {
 
-            CustomerStatus status =
-                    customer.getStatus();
+            CustomerStatus status = customer.getStatus();
 
             if (status == CustomerStatus.WAITING
                     || status == CustomerStatus.SEATED
                     || status == CustomerStatus.ORDERED) {
 
-                customer.recoverSatisfaction(
-                        happyHour.getRecoveryPoints()
-                );
+                customer.recoverSatisfaction(happyHour.getRecoveryPoints());
             }
         }
 
-        return ActionResult.success(
-                "Happy Hour: customers waiting for a table or food recover "
-                        + happyHour.getRecoveryPoints()
-                        + " satisfaction."
-        );
+        return ActionResult.success(String.format(
+                "Happy Hour: customers waiting for a table or food recover %d satisfaction.",
+                happyHour.getRecoveryPoints()));
     }
 
     // The Host automatically seats the first waiting customer, once per turn.
     public ActionResult processHost() {
 
         if (hostTaskUsed) {
-            return ActionResult.failure(
-                    "Host has already seated a customer this turn."
-            );
+            return ActionResult.failure("Host has already seated a customer this turn.");
         }
 
-        Customer customer =
-                restaurant.getWaitingQueue().peek();
+        Customer customer = restaurant.getWaitingQueue().peek();
 
         if (customer == null) {
-            return ActionResult.failure(
-                    "No customers are waiting for a table."
-            );
+            return ActionResult.failure("No customers are waiting for a table.");
         }
 
         Table table = restaurant.findFreeTable();
 
         if (table == null) {
-            return ActionResult.failure(
-                    "No free table is available."
-            );
+            return ActionResult.failure("No free table is available.");
         }
 
-        ActionResult result =
-                host.seatCustomer(customer, table);
+        ActionResult result = host.seatCustomer(customer, table);
 
         if (result.isSuccess()) {
 
-            restaurant.getWaitingQueue()
-                    .remove(customer);
+            restaurant.getWaitingQueue().remove(customer);
 
             hostTaskUsed = true;
         }
@@ -188,18 +166,12 @@ public class GameController {
     // Creates a customer if one is scheduled to arrive.
     public Customer processArrival() {
 
-        if (!config.getArrivalSchedule()
-                .hasArrival(currentTurn)) {
+        if (!config.getArrivalSchedule().hasArrival(currentTurn)) {
 
             return null;
         }
 
-        Customer customer =
-                config.getArrivalSchedule()
-                        .createCustomer(
-                                nextCustomerId,
-                                currentTurn
-                        );
+        Customer customer = config.getArrivalSchedule().createCustomer(nextCustomerId, currentTurn);
 
         nextCustomerId++;
 
@@ -212,41 +184,29 @@ public class GameController {
     public ActionResult seatCustomer(Customer customer) {
 
         if (waiterTaskUsed) {
-            return ActionResult.failure(
-                    "Waiter has already completed a task this turn."
-            );
+            return ActionResult.failure("Waiter has already completed a task this turn.");
         }
 
         if (customer == null) {
-            return ActionResult.failure(
-                    "No customer selected."
-            );
+            return ActionResult.failure("No customer selected.");
         }
 
-        if (!restaurant.getWaitingQueue()
-                .getCustomers()
-                .contains(customer)) {
+        if (!restaurant.getWaitingQueue().getCustomers().contains(customer)) {
 
-            return ActionResult.failure(
-                    "Customer is not in the waiting queue."
-            );
+            return ActionResult.failure("Customer is not in the waiting queue.");
         }
 
         Table table = restaurant.findFreeTable();
 
         if (table == null) {
-            return ActionResult.failure(
-                    "No free table is available."
-            );
+            return ActionResult.failure("No free table is available.");
         }
 
-        ActionResult result =
-                waiter.seatCustomer(customer, table);
+        ActionResult result = waiter.seatCustomer(customer, table);
 
         if (result.isSuccess()) {
 
-            restaurant.getWaitingQueue()
-                    .remove(customer);
+            restaurant.getWaitingQueue().remove(customer);
 
             waiterTaskUsed = true;
         }
@@ -258,35 +218,20 @@ public class GameController {
     public ActionResult takeOrder(Customer customer) {
 
         if (waiterTaskUsed) {
-            return ActionResult.failure(
-                    "Waiter has already completed a task this turn."
-            );
+            return ActionResult.failure("Waiter has already completed a task this turn.");
         }
 
         if (customer == null) {
-            return ActionResult.failure(
-                    "No customer selected."
-            );
+            return ActionResult.failure("No customer selected.");
         }
 
-        MenuItem item =
-                customer.chooseItem(
-                        restaurant.getMenu()
-                );
+        MenuItem item = customer.chooseItem(restaurant.getMenu());
 
-        ActionResult result =
-                waiter.takeOrder(
-                        customer,
-                        item,
-                        nextOrderId,
-                        restaurant.getHappyHour()
-                );
+        ActionResult result = waiter.takeOrder(customer, item, nextOrderId, restaurant.getHappyHour());
 
         if (result.isSuccess()) {
 
-            restaurant.addOrder(
-                    customer.getOrder()
-            );
+            restaurant.addOrder(customer.getOrder());
 
             nextOrderId++;
             waiterTaskUsed = true;
@@ -299,35 +244,23 @@ public class GameController {
     public ActionResult serveOrder(Order order) {
 
         if (waiterTaskUsed) {
-            return ActionResult.failure(
-                    "Waiter has already completed a task this turn."
-            );
+            return ActionResult.failure("Waiter has already completed a task this turn.");
         }
 
         if (order == null) {
-            return ActionResult.failure(
-                    "No order selected."
-            );
+            return ActionResult.failure("No order selected.");
         }
 
-        if (order.getStatus() == OrderStatus.READY
-                && order.getReadyTurn() >= currentTurn) {
+        if (order.getStatus() == OrderStatus.READY && order.getReadyTurn() >= currentTurn) {
 
-            return ActionResult.failure(
-                    "Order became ready this turn and cannot be served until the next turn."
-            );
+            return ActionResult.failure("Order became ready this turn and cannot be served until the next turn.");
         }
 
-        ActionResult result =
-                waiter.serveOrder(
-                        order,
-                        currentTurn
-                );
+        ActionResult result = waiter.serveOrder(order, currentTurn);
 
         if (result.isSuccess()) {
 
-            restaurant.getStats()
-                    .recordServed();
+            restaurant.getStats().recordServed();
 
             waiterTaskUsed = true;
         }
@@ -339,16 +272,10 @@ public class GameController {
     public ActionResult prepareOrder(Order order) {
 
         if (chefTaskUsed) {
-            return ActionResult.failure(
-                    "Chef has already completed a task this turn."
-            );
+            return ActionResult.failure("Chef has already completed a task this turn.");
         }
 
-        ActionResult result =
-                chef.prepare(
-                        order,
-                        currentTurn
-                );
+        ActionResult result = chef.prepare(order, currentTurn);
 
         if (result.isSuccess()) {
             chefTaskUsed = true;
@@ -361,45 +288,34 @@ public class GameController {
     public ActionResult waiterWait() {
 
         if (waiterTaskUsed) {
-            return ActionResult.failure(
-                    "Waiter has already completed a task this turn."
-            );
+            return ActionResult.failure("Waiter has already completed a task this turn.");
         }
 
         waiterTaskUsed = true;
 
-        return ActionResult.success(
-                "Waiter waits this turn."
-        );
+        return ActionResult.success("Waiter waits this turn.");
     }
 
     // Uses the Chef's task without preparing an order.
     public ActionResult chefWait() {
 
         if (chefTaskUsed) {
-            return ActionResult.failure(
-                    "Chef has already completed a task this turn."
-            );
+            return ActionResult.failure("Chef has already completed a task this turn.");
         }
 
         chefTaskUsed = true;
 
-        return ActionResult.success(
-                "Chef waits this turn."
-        );
+        return ActionResult.success("Chef waits this turn.");
     }
 
     // Returns customers who can currently place an order.
     public List<Customer> getCustomersReadyToOrder() {
 
-        List<Customer> result =
-                new ArrayList<>();
+        List<Customer> result = new ArrayList<>();
 
-        for (Customer customer :
-                restaurant.getCustomers()) {
+        for (Customer customer : restaurant.getCustomers()) {
 
-            if (customer.getStatus()
-                    == CustomerStatus.SEATED) {
+            if (customer.getStatus() == CustomerStatus.SEATED) {
 
                 result.add(customer);
             }
@@ -411,16 +327,11 @@ public class GameController {
     // Returns orders the Chef can currently prepare.
     public List<Order> getPreparableOrders() {
 
-        List<Order> result =
-                new ArrayList<>();
+        List<Order> result = new ArrayList<>();
 
-        for (Order order :
-                restaurant.getOrders()) {
+        for (Order order : restaurant.getOrders()) {
 
-            if (order.getStatus()
-                        == OrderStatus.PLACED
-                    || order.getStatus()
-                        == OrderStatus.PREPARING) {
+            if (order.getStatus() == OrderStatus.PLACED || order.getStatus() == OrderStatus.PREPARING) {
 
                 result.add(order);
             }
@@ -437,42 +348,27 @@ public class GameController {
     // Advances eating and processes one automatic payment.
     public ActionResult processEatingAndPayment() {
 
-        for (Order order :
-                restaurant.getOrders()) {
+        for (Order order : restaurant.getOrders()) {
 
-            if (order.getStatus()
-                        == OrderStatus.SERVED
-                    && order.getServedTurn()
-                        < currentTurn) {
+            if (order.getStatus() == OrderStatus.SERVED && order.getServedTurn() < currentTurn) {
 
-                order.markReadyToPay(
-                        currentTurn
-                );
+                order.markReadyToPay(currentTurn);
 
-                order.getCustomer()
-                        .setStatus(
-                                CustomerStatus.READY_TO_PAY
-                        );
+                order.getCustomer().setStatus(CustomerStatus.READY_TO_PAY);
             }
         }
 
-        return cashier.processNextPayment(
-                restaurant,
-                currentTurn
-        );
+        return cashier.processNextPayment(restaurant, currentTurn);
     }
 
     // Applies satisfaction loss and handles abandonment.
     public void processSatisfactionAndAbandonment() {
 
-        for (Customer customer :
-                restaurant.getCustomers()) {
+        for (Customer customer : restaurant.getCustomers()) {
 
-            CustomerStatus status =
-                    customer.getStatus();
+            CustomerStatus status = customer.getStatus();
 
-            boolean losesSatisfaction =
-                    status == CustomerStatus.WAITING
+            boolean losesSatisfaction = status == CustomerStatus.WAITING
                     || status == CustomerStatus.SEATED
                     || status == CustomerStatus.ORDERED;
 
@@ -486,12 +382,9 @@ public class GameController {
                 continue;
             }
 
-            customer.setStatus(
-                    CustomerStatus.LEFT
-            );
+            customer.setStatus(CustomerStatus.LEFT);
 
-            restaurant.getWaitingQueue()
-                    .remove(customer);
+            restaurant.getWaitingQueue().remove(customer);
 
             if (customer.getOrder() != null) {
                 customer.getOrder().cancel();
@@ -501,36 +394,25 @@ public class GameController {
                 customer.getTable().release();
             }
 
-            restaurant.getStats()
-                    .recordDeparture();
+            restaurant.getStats().recordDeparture();
         }
     }
 
     // Checks whether the victory conditions are met.
     public boolean hasWon() {
 
-        int paid =
-                restaurant.getStats()
-                        .getPaidCount();
+        int paid = restaurant.getStats().getPaidCount();
 
-        int revenue =
-                restaurant.getStats()
-                        .getRevenueCents();
+        int revenue = restaurant.getStats().getRevenueCents();
 
-        double average =
-                restaurant.getStats()
-                        .getAveragePaidSatisfaction();
+        double average = restaurant.getStats().getAveragePaidSatisfaction();
 
-        return paid
-                    >= config.getMinPaidCustomers()
-                && revenue
-                    >= config.getMinRevenueCents()
-                && average
-                    >= config.getMinAverageSatisfaction();
+        return paid >= config.getMinPaidCustomers()
+                && revenue >= config.getMinRevenueCents()
+                && average >= config.getMinAverageSatisfaction();
     }
 
     public boolean isGameOver() {
-        return currentTurn
-                >= config.getMaxTurns();
+        return currentTurn >= config.getMaxTurns();
     }
 }

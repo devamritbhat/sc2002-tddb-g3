@@ -4,17 +4,14 @@ import java.util.List;
 
 import support.ActionResult;
 import support.CustomerStatus;
-import support.OrderStatus;
 
 // Handles automatic customer payments.
 public class Cashier {
 
     // Processes the oldest eligible customer payment.
-    public ActionResult processNextPayment(Restaurant restaurant,
-                                           int currentTurn) {
+    public ActionResult processNextPayment(Restaurant restaurant, int currentTurn) {
 
-        List<Customer> customers =
-                restaurant.findReadyToPayCustomers();
+        List<Customer> customers = restaurant.findReadyToPayCustomers();
 
         for (Customer customer : customers) {
 
@@ -25,29 +22,17 @@ public class Cashier {
                 order.markPaid();
                 customer.setStatus(CustomerStatus.PAID);
 
-                restaurant.getStats().recordPayment(
-                        customer,
-                        order.getBillCents()
-                );
+                restaurant.getStats().recordPayment(customer, order.getBillCents());
 
                 if (customer.getTable() != null) {
                     customer.getTable().release();
                 }
 
-                return ActionResult.success(
-                        "Customer " + customer.getId()
-                                + " paid $"
-                                + String.format(
-                                        "%.2f",
-                                        order.getBillCents() / 100.0
-                                )
-                                + "."
-                );
+                return ActionResult.success(String.format(
+                        "Customer %d paid $%.2f.", customer.getId(), order.getBillCents() / 100.0));
             }
         }
 
-        return ActionResult.failure(
-                "No customer is ready to pay."
-        );
+        return ActionResult.failure("No customer is ready to pay.");
     }
 }
