@@ -6,9 +6,11 @@ Repository: https://github.com/devamritbhat/sc2002-tddb-g3.git
 
 The project is developed progressively across three stages. The same codebase and documentation are updated as development progresses, while each complete stage is preserved using Git tags:
 
-- `stage-1`
-- `stage-2`
-- `stage-3`
+| Stage | Code at tag | Compare |
+|---|---|---|
+| Stage 1 | [stage-1](https://github.com/devamritbhat/sc2002-tddb-g3/tree/stage-1) | — |
+| Stage 2 | [stage-2](https://github.com/devamritbhat/sc2002-tddb-g3/tree/stage-2) | [stage-1...stage-2](https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-1...stage-2) |
+| Stage 3 | [stage-3](https://github.com/devamritbhat/sc2002-tddb-g3/tree/stage-3) | [stage-2...stage-3](https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-2...stage-3) |
 
 This README will be updated as the project evolves.
 
@@ -712,8 +714,6 @@ This section records the changes between stages: new files, changed or removed f
 
 ## Stage 1 → Stage 2
 
-Compare: https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-1...stage-2
-
 | Change | File | Reason |
 |---|---|---|
 | New | `VIPCustomer.java`, `CriticCustomer.java` | The two Stage 2 customer types |
@@ -731,8 +731,6 @@ Little had to change because `Customer` was already abstract in Stage 1. The tur
 
 ## Stage 2 → Stage 3
 
-Compare: https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-2...stage-3
-
 | Change | File | Reason |
 |---|---|---|
 | New | `Host.java` | The Host role, which seats one waiting customer per turn |
@@ -749,3 +747,17 @@ Compare: https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-2...stage-
 | New / Changed | `docs/` | Stage 3 test runs, updated class diagram and the sequence diagram |
 
 The turn sequence, staff classes, customer types and payment rules are unchanged. The only earlier rule that changed is the food choice: with six menu choices, Customers 4 and 6 now order combos, while Customers 1 to 3 and the Critic order the same as before. One Stage 2 check was updated for this (it now uses Customer 1). All other Stage 1 and Stage 2 tests still pass.
+
+## Video
+
+Video link: (add link)
+
+| # | Segment | Presenter | Timestamp |
+|---|---|---|---|
+| 1 | The game launching from the submitted project | | |
+| 2 | Meaningful manager choices, including a decision where staff are constrained | | |
+| 3 | A dish going READY → SERVED → payment | | |
+| 4 | A VIP or Critic behaviour | | |
+| 5 | A Stage 3 feature | | |
+| 6 | One victory and one defeat | | |
+| 7 | The stage tag comparisons and the diagrams | | |
