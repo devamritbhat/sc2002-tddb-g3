@@ -162,7 +162,6 @@ sc2002-tddb-g3/
 ├── docs/
 │   ├── uml/
 │   │   ├── class-diagram.png
-│   │   └── class-diagram.puml
 │   │
 │   └── test-runs/
 │       ├── victory-run.txt
