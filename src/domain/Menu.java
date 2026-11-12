@@ -13,7 +13,7 @@ public class Menu {
 
         items = new ArrayList<>();
 
-        // Stage 1 menu items.
+        // Base menu items.
         items.add(new MenuItem("Salad", 900, 1));
         items.add(new MenuItem("Burger", 1500, 1));
         items.add(new MenuItem("Pasta", 1800, 2));
@@ -33,5 +33,17 @@ public class Menu {
         int index = (customer.getId() - 1) % items.size();
 
         return items.get(index);
+    }
+
+    // Finds a menu item by name.
+    public MenuItem findItem(String name) {
+
+        for (MenuItem item : items) {
+            if (item.getName().equalsIgnoreCase(name)) {
+                return item;
+            }
+        }
+
+        return null;
     }
 }

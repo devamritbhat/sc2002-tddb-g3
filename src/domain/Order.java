@@ -24,7 +24,8 @@ public class Order {
 
         this.status = OrderStatus.PLACED;
         this.remainingPreparationUnits = item.getPreparationUnits();
-        this.billCents = item.getPriceCents();
+        // Bill is fixed when the order is taken.
+        this.billCents = customer.calculateBillCents(item.getPriceCents());
 
         this.readyTurn = -1;
         this.servedTurn = -1;

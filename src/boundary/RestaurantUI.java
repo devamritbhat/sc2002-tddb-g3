@@ -22,7 +22,7 @@ public class RestaurantUI {
         scanner = new Scanner(System.in);
     }
 
-    // Runs the complete Stage 1 game.
+    // Runs the complete game.
     public void run() {
 
         System.out.println("================================");
@@ -43,7 +43,7 @@ public class RestaurantUI {
 
             if (arrival != null) {
                 System.out.println(
-                        "Customer " + arrival.getId()
+                        describe(arrival)
                                 + " has arrived."
                 );
             }
@@ -133,7 +133,7 @@ public class RestaurantUI {
 
         for (Customer customer : customers) {
             System.out.println(
-                    "Customer " + customer.getId()
+                    describe(customer)
                             + " | Satisfaction: "
                             + customer.getSatisfaction()
             );
@@ -187,7 +187,7 @@ public class RestaurantUI {
         for (Customer customer : customers) {
 
             System.out.println(
-                    "Customer " + customer.getId()
+                    describe(customer)
                             + " | "
                             + customer.getStatus()
                             + " | Satisfaction: "
@@ -223,6 +223,8 @@ public class RestaurantUI {
                             + order.getStatus()
                             + " | Remaining units: "
                             + order.getRemainingPreparationUnits()
+                            + " | Bill: "
+                            + formatMoney(order.getBillCents())
             );
         }
     }
@@ -383,6 +385,16 @@ public class RestaurantUI {
                 controller.takeOrder(selected);
 
         System.out.println(result.getMessage());
+
+        if (result.isSuccess()) {
+            System.out.println(
+                    "Bill: "
+                            + formatMoney(
+                                    selected.getOrder()
+                                            .getBillCents()
+                            )
+            );
+        }
 
         return result.isSuccess();
     }
@@ -704,6 +716,12 @@ public class RestaurantUI {
     }
 
     // Formats integer cents as dollars.
+    // Shows a customer with their type.
+    private String describe(Customer customer) {
+        return "Customer " + customer.getId()
+                + " (" + customer.getTypeName() + ")";
+    }
+
     private String formatMoney(int cents) {
 
         return String.format(

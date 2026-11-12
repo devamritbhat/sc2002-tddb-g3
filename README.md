@@ -22,25 +22,21 @@ This README will be updated as the project evolves.
 - Keith
 - Saajid
 
-The project is developed collaboratively by all team members.
-
 The following areas indicate each member's primary responsibility for design review, implementation understanding, testing and presentation:
 
-| Member | Primary Area |
-|---|---|
-| Devamrit | Overall architecture, `GameController`, game integration and lifecycle |
-| Evan | `Restaurant`, `WaitingQueue`, `Table`, Waiter, seating and serving |
-| Hein | `Menu`, `MenuItem`, `Order`, Chef and food preparation |
-| Keith | `Cashier`, `GameStats`, victory/defeat conditions and testing |
-| Saajid | `Customer`, `RegularCustomer`, satisfaction and abandonment |
-
-All members contribute collaboratively to the overall implementation.
+| Member | Primary Area | Stage 2 |
+|---|---|---|
+| Devamrit | Overall architecture, `GameController`, game integration and lifecycle | Arrival types in `ArrivalSchedule` and `GameController` |
+| Evan | `Restaurant`, `WaitingQueue`, `Table`, Waiter, seating and serving | Customer type and bill display in `RestaurantUI`, class diagram update |
+| Hein | `Menu`, `MenuItem`, `Order`, Chef and food preparation | Critic's Pasta choice: `chooseItem()` and `Menu.findItem()` |
+| Keith | `Cashier`, `GameStats`, victory/defeat conditions and testing | VIP discount: `calculateBillCents()` and the bill in `Order`; Stage 2 tests and runs |
+| Saajid | `Customer`, `RegularCustomer`, satisfaction and abandonment | `VIPCustomer` and `CriticCustomer`: satisfaction loss and customer types |
 
 ---
 
 # Current Implementation
 
-The current version implements the complete basic Restaurant Rush game using regular customers and the three required menu items.
+The current version (Stage 2) implements the complete Restaurant Rush game with Regular, VIP and Critic customers and the three required menu items.
 
 ## Features
 
@@ -48,7 +44,7 @@ The implementation includes:
 
 - 18-turn game
 - 2 restaurant tables
-- Regular customers
+- Regular, VIP and Critic customers
 - Scheduled customer arrivals
 - Waiting queue
 - Customer seating
@@ -75,6 +71,16 @@ The implementation includes:
 | Pasta | $18.00 | 2 |
 
 Customers choose their menu item automatically using a deterministic rule.
+
+### Customer Types
+
+| Type | Satisfaction loss per waiting turn | Bill | Food choice |
+|---|---:|---|---|
+| Regular | 8 | Full price | By customer ID |
+| VIP | 5 | 10% off | By customer ID |
+| Critic | 12 | Full price | Always Pasta |
+
+Customer 2 (turn 4) is a VIP and Customer 5 (turn 13) is a Critic. The other four arrivals are Regular.
 
 ---
 
@@ -139,6 +145,7 @@ sc2002-tddb-g3/
 │   ├── domain/
 │   │   ├── Cashier.java
 │   │   ├── Chef.java
+│   │   ├── CriticCustomer.java
 │   │   ├── Customer.java
 │   │   ├── GameStats.java
 │   │   ├── Menu.java
@@ -147,6 +154,7 @@ sc2002-tddb-g3/
 │   │   ├── RegularCustomer.java
 │   │   ├── Restaurant.java
 │   │   ├── Table.java
+│   │   ├── VIPCustomer.java
 │   │   ├── Waiter.java
 │   │   └── WaitingQueue.java
 │   │
@@ -156,8 +164,8 @@ sc2002-tddb-g3/
 │       └── OrderStatus.java
 │
 ├── test/
-│   ├── Stage1Test.java
-│   └── Stage1SimulationTest.java
+│   ├── GameTest.java
+│   └── SimulationTest.java
 │
 ├── docs/
 │   ├── uml/
@@ -167,7 +175,11 @@ sc2002-tddb-g3/
 │       ├── victory-run.txt
 │       ├── victory-input.txt
 │       ├── defeat-run.txt
-│       └── defeat-input.txt
+│       ├── defeat-input.txt
+│       ├── stage2-victory-run.txt
+│       ├── stage2-victory-input.txt
+│       ├── stage2-defeat-run.txt
+│       └── stage2-defeat-input.txt
 │
 └── out/
 ```
@@ -211,7 +223,7 @@ javac -d out $(find src test -name "*.java")
 ## Run Rule-Level Tests
 
 ```bash
-java -cp out Stage1Test
+java -cp out GameTest
 ```
 
 These tests currently check:
@@ -226,34 +238,41 @@ These tests currently check:
 - Payment and table release
 - Customer abandonment
 - Victory conditions
+- Staff task limits
+- Cashier oldest-first rule
+- Stage 2 customer types: arrivals, VIP discount and Critic Pasta
 
 ## Run Full Game Simulations
 
 Run both simulations:
 
 ```bash
-java -cp out Stage1SimulationTest
+java -cp out SimulationTest
 ```
 
 Run only the victory scenario:
 
 ```bash
-java -cp out Stage1SimulationTest victory
+java -cp out SimulationTest victory
 ```
 
 Run only the defeat scenario:
 
 ```bash
-java -cp out Stage1SimulationTest defeat
+java -cp out SimulationTest defeat
 ```
 
 ---
 
 # Test Evidence
 
-Both runs use the base setting. Since the game has no randomness, the results are reproducible. Customers order by ID: 1 and 4 choose Salad, 2 and 5 choose Burger, and 3 and 6 choose Pasta.
+All runs use the base setting. Since the game has no randomness, the results are reproducible.
 
-## Victory Run
+## Stage 1
+
+Recorded at tag `stage-1`, when all customers were Regular. Customers order by ID: 1 and 4 choose Salad, 2 and 5 choose Burger, and 3 and 6 choose Pasta. Run `git checkout stage-1` to reproduce them.
+
+### Victory Run
 
 | Turn | Waiter | Chef |
 |---|---|---|
@@ -295,7 +314,7 @@ Saved output:
 docs/test-runs/victory-run.txt
 ```
 
-## Defeat Run
+### Defeat Run
 
 The Waiter and Chef wait every turn, so no customers get seated. Waiting customers lose 8 satisfaction each turn. Customer 1 leaves after Turn 13, followed by Customer 2 after Turn 16.
 
@@ -318,6 +337,81 @@ Saved output:
 
 ```text
 docs/test-runs/defeat-run.txt
+```
+
+## Stage 2
+
+Customer 2 is a VIP and orders a Burger. Customer 5 is a Critic and orders Pasta.
+
+### Victory Run
+
+| Turn | Waiter | Chef |
+|---|---|---|
+| 1 | Seat Customer 1 | Wait |
+| 2 | Take order from Customer 1 | Prepare Order 1 |
+| 3 | Serve Order 1 | Wait |
+| 4 | Seat Customer 2 (VIP) | Wait |
+| 5 | Take order from Customer 2 | Prepare Order 2 |
+| 6 | Serve Order 2 | Wait |
+| 7 | Seat Customer 3 | Wait |
+| 8 | Take order from Customer 3 | Prepare Order 3 |
+| 9 | Wait | Prepare Order 3 |
+| 10 | Seat Customer 4 | Wait |
+| 11 | Serve Order 3 | Wait |
+| 12 | Take order from Customer 4 | Prepare Order 4 |
+| 13 | Serve Order 4 | Wait |
+| 14 | Seat Customer 5 (Critic) | Wait |
+| 15 | Take order from Customer 5 | Prepare Order 5 |
+| 16 | Wait | Prepare Order 5 |
+| 17 | Serve Order 5 | Wait |
+| 18 | Wait | Wait |
+
+The VIP pays $13.50 for the Burger. The Critic's Pasta takes two Chef turns and is served on turn 17, too late to pay.
+
+Result: **VICTORY**
+
+```text
+Paid customers: 4          (target: at least 4)
+Revenue: $49.50            (target: at least $45)
+Average satisfaction: 79.50 (target: at least 60)
+Unhappy departures: 0
+```
+
+Reproduce:
+
+```bash
+java -cp out app.RestaurantRushApp < docs/test-runs/stage2-victory-input.txt
+```
+
+Saved output:
+
+```text
+docs/test-runs/stage2-victory-run.txt
+```
+
+### Defeat Run
+
+The Waiter and Chef wait every turn. Customer 1 leaves after Turn 13. The VIP loses only 5 per turn, so they never leave.
+
+Result: **DEFEAT**
+
+```text
+Paid customers: 0          (target: at least 4)
+Revenue: $0.00             (target: at least $45)
+Average satisfaction: N/A
+Unhappy departures: 1
+```
+
+Reproduce:
+
+```bash
+java -cp out app.RestaurantRushApp < docs/test-runs/stage2-defeat-input.txt
+```
+
+Saved output:
+
+```text
+docs/test-runs/stage2-defeat-run.txt
 ```
 
 ## Input File Format
@@ -357,6 +451,8 @@ Examples include:
 
 - `Customer`
 - `RegularCustomer`
+- `VIPCustomer`
+- `CriticCustomer`
 - `Order`
 - `Menu`
 - `MenuItem`
@@ -376,11 +472,9 @@ The controller determines when actions occur, while the relevant domain classes 
 
 ## Customer Behaviour
 
-`Customer` is an abstract class.
+`Customer` is an abstract class. `RegularCustomer`, `VIPCustomer` and `CriticCustomer` each set their own satisfaction loss. `VIPCustomer` overrides the bill (10% off) and `CriticCustomer` overrides the food choice (always Pasta).
 
-`RegularCustomer` defines the current satisfaction-loss behaviour.
-
-Customer-specific behaviour is kept inside customer objects rather than being placed in the UI or controller.
+`GameController` never checks a customer's type. `ArrivalSchedule` decides which type of customer arrives.
 
 ## Order Lifecycle
 
@@ -420,6 +514,8 @@ $15.00 → 1500
 $18.00 → 1800
 ```
 
+The VIP discount is rounded to the nearest cent, and the bill is fixed when the order is taken.
+
 ## Invalid Actions
 
 Invalid manager choices return an `ActionResult` explaining why the action cannot be performed.
@@ -430,7 +526,7 @@ The manager may then choose again without consuming the Waiter or Chef task for 
 
 Customers select their own menu item.
 
-The current implementation uses a deterministic rule based on customer ID so that behaviour remains reproducible during testing.
+Regular and VIP customers choose by customer ID so that runs are reproducible. Critics always order Pasta.
 
 ---
 
@@ -488,17 +584,27 @@ This allows the development between stages to be compared directly through Git h
 
 # Stage Transitions
 
-As later stages are implemented, this section will record the changes between:
+This section records the changes between stages: new files, changed or removed files, the reasons, and a compare link.
 
-- Stage 1 → Stage 2
-- Stage 2 → Stage 3
+## Stage 1 → Stage 2
 
-For each transition, the README will document:
+Compare: https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-1...stage-2
 
-- New files added
-- Existing files modified
-- Files removed, if any
-- Reasons for the changes
-- Relevant Git commits or comparisons
+| Change | File | Reason |
+|---|---|---|
+| New | `VIPCustomer.java`, `CriticCustomer.java` | The two Stage 2 customer types |
+| Changed | `Customer.java` | Added `chooseItem()`, `calculateBillCents()` and `getTypeName()` so each type can set its own food and bill |
+| Changed | `RegularCustomer.java` | Added `getTypeName()` |
+| Changed | `Order.java` | The bill comes from the customer, so the VIP discount is fixed when ordering |
+| Changed | `Menu.java` | Added `findItem()` for the Critic's Pasta |
+| Changed | `ArrivalSchedule.java` | Added `createCustomer()` to pick each arrival's type |
+| Changed | `GameController.java` | Uses `createCustomer()` and lets the customer choose its food |
+| Changed | `RestaurantUI.java` | Shows customer types and bills |
+| Renamed | `Stage1Test.java` → `GameTest.java`, `Stage1SimulationTest.java` → `SimulationTest.java` | Tests now cover every stage; Stage 2 checks added |
+| New / Changed | `docs/` | Stage 2 test runs and updated class diagram |
 
-This section will be updated when the corresponding stages are implemented.
+Little had to change because `Customer` was already abstract in Stage 1. The turn sequence, staff classes and Stage 1 rules are unchanged, and all Stage 1 tests still pass.
+
+## Stage 2 → Stage 3
+
+To be added when Stage 3 is implemented.

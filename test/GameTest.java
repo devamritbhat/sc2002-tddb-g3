@@ -2,6 +2,7 @@ import control.GameConfig;
 import control.GameController;
 
 import domain.Cashier;
+import domain.CriticCustomer;
 import domain.Customer;
 import domain.Menu;
 import domain.MenuItem;
@@ -9,12 +10,13 @@ import domain.Order;
 import domain.RegularCustomer;
 import domain.Restaurant;
 import domain.Table;
+import domain.VIPCustomer;
 
 import support.CustomerStatus;
 import support.OrderStatus;
 
-// Automated checks for Stage 1.
-public class Stage1Test {
+// Automated checks for the game rules.
+public class GameTest {
 
     public static void main(String[] args) {
 
@@ -31,8 +33,216 @@ public class Stage1Test {
         testStaffTaskLimits();
         testCashierOldestFirst();
 
+        // Stage 2 customer types.
+        testArrivalCustomerTypes();
+        testRegularCustomerUnchanged();
+        testVIPCustomer();
+        testCriticCustomer();
+        testDiscountLockedWhenOrdered();
+
         System.out.println();
-        System.out.println("All Stage 1 tests passed.");
+        System.out.println("All tests passed.");
+    }
+
+    // Checks the customer type of each arrival.
+    private static void testArrivalCustomerTypes() {
+
+        GameController controller =
+                new GameController(new GameConfig());
+
+        String[] expectedTypes =
+                {"Regular", "VIP", "Regular", "Regular", "Critic", "Regular"};
+
+        int arrivals = 0;
+
+        for (int turn = 1; turn <= 18; turn++) {
+
+            controller.startNextTurn();
+
+            Customer customer =
+                    controller.processArrival();
+
+            if (customer != null) {
+
+                assertEquals(
+                        expectedTypes[arrivals],
+                        customer.getTypeName(),
+                        "Customer " + customer.getId() + " has the wrong type."
+                );
+
+                arrivals++;
+            }
+        }
+
+        assertEquals(
+                6,
+                arrivals,
+                "There should still be exactly 6 arrivals."
+        );
+
+        System.out.println(
+                "PASS: Arrival customer types are correct."
+        );
+    }
+
+    // Checks that Regular customers still follow the Stage 1 rules.
+    private static void testRegularCustomerUnchanged() {
+
+        Menu menu = new Menu();
+
+        Customer customer =
+                new RegularCustomer(4, 10);
+
+        assertEquals(
+                "Salad",
+                customer.chooseItem(menu).getName(),
+                "Regular customer 4 should order Salad."
+        );
+
+        assertEquals(
+                1500,
+                customer.calculateBillCents(1500),
+                "Regular customers should pay full price."
+        );
+
+        System.out.println(
+                "PASS: Regular customers are unchanged."
+        );
+    }
+
+    // Checks VIP satisfaction loss and the 10% discount.
+    private static void testVIPCustomer() {
+
+        Customer vip =
+                new VIPCustomer(2, 4);
+
+        vip.loseSatisfaction();
+
+        assertEquals(
+                95,
+                vip.getSatisfaction(),
+                "VIP should lose 5 satisfaction per turn."
+        );
+
+        assertEquals(
+                810,
+                vip.calculateBillCents(900),
+                "VIP Salad should cost $8.10."
+        );
+
+        assertEquals(
+                1350,
+                vip.calculateBillCents(1500),
+                "VIP Burger should cost $13.50."
+        );
+
+        assertEquals(
+                1620,
+                vip.calculateBillCents(1800),
+                "VIP Pasta should cost $16.20."
+        );
+
+        assertEquals(
+                "Burger",
+                vip.chooseItem(new Menu()).getName(),
+                "VIP customer 2 should follow the ID rule and order Burger."
+        );
+
+        System.out.println(
+                "PASS: VIP customer works correctly."
+        );
+    }
+
+    // Checks Critic satisfaction loss and Pasta preference.
+    private static void testCriticCustomer() {
+
+        Menu menu = new Menu();
+
+        // Customer 1 would order Salad under the ID rule.
+        Customer critic =
+                new CriticCustomer(1, 1);
+
+        critic.loseSatisfaction();
+
+        assertEquals(
+                88,
+                critic.getSatisfaction(),
+                "Critic should lose 12 satisfaction per turn."
+        );
+
+        assertEquals(
+                "Pasta",
+                critic.chooseItem(menu).getName(),
+                "Critic should always order Pasta."
+        );
+
+        assertEquals(
+                1800,
+                critic.calculateBillCents(1800),
+                "Critic should pay full price."
+        );
+
+        for (int turn = 0; turn < 10; turn++) {
+            critic.loseSatisfaction();
+        }
+
+        assertEquals(
+                0,
+                critic.getSatisfaction(),
+                "Critic satisfaction should not go below 0."
+        );
+
+        System.out.println(
+                "PASS: Critic customer works correctly."
+        );
+    }
+
+    // Checks that the VIP discount is fixed when ordering.
+    private static void testDiscountLockedWhenOrdered() {
+
+        GameController controller =
+                new GameController(new GameConfig());
+
+        // Skip to turn 4, when the VIP arrives.
+        for (int turn = 1; turn <= 3; turn++) {
+            controller.startNextTurn();
+            controller.processArrival();
+            controller.waiterWait();
+            controller.chefWait();
+            controller.processEatingAndPayment();
+            controller.processSatisfactionAndAbandonment();
+        }
+
+        controller.startNextTurn();
+        Customer vip = controller.processArrival();
+
+        assertEquals(
+                "VIP",
+                vip.getTypeName(),
+                "Customer 2 should be a VIP."
+        );
+
+        assertTrue(
+                controller.seatCustomer(vip).isSuccess(),
+                "VIP should be seated."
+        );
+
+        controller.startNextTurn();
+
+        assertTrue(
+                controller.takeOrder(vip).isSuccess(),
+                "VIP order should be taken."
+        );
+
+        assertEquals(
+                1350,
+                vip.getOrder().getBillCents(),
+                "VIP Burger bill should be locked at $13.50."
+        );
+
+        System.out.println(
+                "PASS: VIP discount is locked when ordering."
+        );
     }
 
     // Checks that the game runs exactly 18 turns.

@@ -1,0 +1,24 @@
+=== VICTORY RUN ===
+Turn  1 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  2 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  3 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  4 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  5 | Paid: 1 | Revenue: $9.00 | Departures: 0
+Turn  6 | Paid: 1 | Revenue: $9.00 | Departures: 0
+Turn  7 | Paid: 1 | Revenue: $9.00 | Departures: 0
+Turn  8 | Paid: 2 | Revenue: $22.50 | Departures: 0
+Turn  9 | Paid: 2 | Revenue: $22.50 | Departures: 0
+Turn 10 | Paid: 2 | Revenue: $22.50 | Departures: 0
+Turn 11 | Paid: 2 | Revenue: $22.50 | Departures: 0
+Turn 12 | Paid: 2 | Revenue: $22.50 | Departures: 0
+Turn 13 | Paid: 3 | Revenue: $40.50 | Departures: 0
+Turn 14 | Paid: 3 | Revenue: $40.50 | Departures: 0
+Turn 15 | Paid: 4 | Revenue: $49.50 | Departures: 0
+Turn 16 | Paid: 4 | Revenue: $49.50 | Departures: 0
+Turn 17 | Paid: 4 | Revenue: $49.50 | Departures: 0
+Turn 18 | Paid: 4 | Revenue: $49.50 | Departures: 0
+
+PASS: Full victory simulation succeeded.
+Paid customers: 4
+Revenue: $49.50
+Average satisfaction: 79.50

@@ -5,8 +5,8 @@ import domain.Customer;
 import domain.Order;
 import domain.Restaurant;
 
-// Full-game simulations for Stage 1.
-public class Stage1SimulationTest {
+// Full-game simulations.
+public class SimulationTest {
 
     public static void main(String[] args) {
 
@@ -17,7 +17,7 @@ public class Stage1SimulationTest {
 
             System.out.println();
             System.out.println(
-                    "All Stage 1 simulation tests passed."
+                    "All simulation tests passed."
             );
 
         } else if (
@@ -35,7 +35,7 @@ public class Stage1SimulationTest {
         } else {
 
             System.out.println(
-                    "Usage: Stage1SimulationTest [victory|defeat]"
+                    "Usage: SimulationTest [victory|defeat]"
             );
         }
     }
@@ -309,6 +309,18 @@ public class Stage1SimulationTest {
                 );
                 break;
 
+            case 17:
+                assertSuccess(
+                        controller.serveOrder(
+                                getOrder(
+                                        controller,
+                                        5
+                                )
+                        ),
+                        "Turn 17: Serve Customer 5 order"
+                );
+                break;
+
             default:
                 assertSuccess(
                         controller.waiterWait(),
@@ -374,7 +386,9 @@ public class Stage1SimulationTest {
                 );
                 break;
 
+            // The Critic's Pasta needs 2 units.
             case 15:
+            case 16:
                 assertSuccess(
                         controller.prepareOrder(
                                 getOrder(
@@ -382,7 +396,7 @@ public class Stage1SimulationTest {
                                         5
                                 )
                         ),
-                        "Turn 15: Prepare Customer 5 order"
+                        "Prepare Customer 5 order"
                 );
                 break;
 

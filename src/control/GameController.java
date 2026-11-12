@@ -8,7 +8,6 @@ import domain.Chef;
 import domain.Customer;
 import domain.MenuItem;
 import domain.Order;
-import domain.RegularCustomer;
 import domain.Restaurant;
 import domain.Table;
 import domain.Waiter;
@@ -95,10 +94,11 @@ public class GameController {
         }
 
         Customer customer =
-                new RegularCustomer(
-                        nextCustomerId,
-                        currentTurn
-                );
+                config.getArrivalSchedule()
+                        .createCustomer(
+                                nextCustomerId,
+                                currentTurn
+                        );
 
         nextCustomerId++;
 
@@ -169,8 +169,9 @@ public class GameController {
         }
 
         MenuItem item =
-                restaurant.getMenu()
-                        .chooseItemFor(customer);
+                customer.chooseItem(
+                        restaurant.getMenu()
+                );
 
         ActionResult result =
                 waiter.takeOrder(
@@ -403,7 +404,7 @@ public class GameController {
         }
     }
 
-    // Checks whether the Stage 1 victory conditions are met.
+    // Checks whether the victory conditions are met.
     public boolean hasWon() {
 
         int paid =

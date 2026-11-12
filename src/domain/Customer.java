@@ -74,6 +74,19 @@ public abstract class Customer {
         return status == CustomerStatus.LEFT;
     }
 
+    // Chooses food by customer ID by default.
+    public MenuItem chooseItem(Menu menu) {
+        return menu.chooseItemFor(this);
+    }
+
+    // Charges full price by default.
+    public int calculateBillCents(int priceCents) {
+        return priceCents;
+    }
+
     // Each customer type defines its own satisfaction loss.
     public abstract int getSatisfactionLossPerTurn();
+
+    // Customer type shown in the game.
+    public abstract String getTypeName();
 }
