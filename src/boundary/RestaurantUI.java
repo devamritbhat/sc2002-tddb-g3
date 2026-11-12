@@ -6,6 +6,8 @@ import java.util.Scanner;
 import control.GameController;
 import domain.Customer;
 import domain.GameStats;
+import domain.HappyHour;
+import domain.MenuItem;
 import domain.Order;
 import domain.Restaurant;
 import domain.Table;
@@ -29,6 +31,8 @@ public class RestaurantUI {
         System.out.println("       RESTAURANT RUSH");
         System.out.println("================================");
 
+        showMenu();
+
         while (!controller.isGameOver()) {
 
             controller.startNextTurn();
@@ -38,6 +42,16 @@ public class RestaurantUI {
             System.out.println("TURN " + controller.getCurrentTurn());
             System.out.println("================================");
 
+            // Start of turn: Happy Hour choice and recovery.
+            handleHappyHour();
+
+            ActionResult recovery =
+                    controller.processHappyHourRecovery();
+
+            if (recovery.isSuccess()) {
+                System.out.println(recovery.getMessage());
+            }
+
             // Step 1: Customer arrival.
             Customer arrival = controller.processArrival();
 
@@ -46,6 +60,14 @@ public class RestaurantUI {
                         describe(arrival)
                                 + " has arrived."
                 );
+            }
+
+            // The Host seats the first waiting customer automatically.
+            ActionResult hostResult =
+                    controller.processHost();
+
+            if (hostResult.isSuccess()) {
+                System.out.println(hostResult.getMessage());
             }
 
             showState();
@@ -103,8 +125,16 @@ public class RestaurantUI {
             );
         }
 
+        System.out.println(
+                "Happy Hour: "
+                        + describeHappyHour(
+                                restaurant.getHappyHour()
+                        )
+        );
+
         System.out.println();
         System.out.println("Staff Tasks Available:");
+        System.out.println("Host: automatic, seats up to 1 waiting customer");
         System.out.println("Waiter: 1 task");
         System.out.println("Chef: 1 preparation unit");
         System.out.println("Cashier: automatic, up to 1 payment");
@@ -225,8 +255,83 @@ public class RestaurantUI {
                             + order.getRemainingPreparationUnits()
                             + " | Bill: "
                             + formatMoney(order.getBillCents())
+                            + (order.isHappyHourPrice()
+                                    ? " (Happy Hour)"
+                                    : "")
             );
         }
+    }
+
+    // Shows the menu once at the start of the game.
+    private void showMenu() {
+
+        System.out.println();
+        System.out.println("Menu:");
+
+        for (MenuItem item :
+                controller.getRestaurant()
+                        .getMenu()
+                        .getItems()) {
+
+            System.out.println(
+                    item.getName()
+                            + " | "
+                            + formatMoney(item.getPriceCents())
+                            + " | Preparation units: "
+                            + item.getPreparationUnits()
+            );
+        }
+    }
+
+    // Asks whether to start Happy Hour, while it is still available.
+    private void handleHappyHour() {
+
+        if (!controller.getRestaurant()
+                .getHappyHour()
+                .canActivate()) {
+            return;
+        }
+
+        while (true) {
+
+            System.out.println();
+            System.out.println("Happy Hour (once per game, lasts this turn and the next):");
+            System.out.println("1. Start Happy Hour");
+            System.out.println("2. Not now");
+
+            int choice =
+                    readInt("Choose: ");
+
+            if (choice == 1) {
+                System.out.println(
+                        controller.activateHappyHour()
+                                .getMessage()
+                );
+                return;
+            }
+
+            if (choice == 2) {
+                return;
+            }
+
+            System.out.println(
+                    "Invalid choice. Try again."
+            );
+        }
+    }
+
+    // Shows whether Happy Hour is available, active or used.
+    private String describeHappyHour(HappyHour happyHour) {
+
+        if (happyHour.isActive()) {
+            return happyHour.getRemainingTurns() == 2
+                    ? "ACTIVE (2 turns left: this turn and the next)"
+                    : "ACTIVE (1 turn left: this turn)";
+        }
+
+        return happyHour.isUsed()
+                ? "used"
+                : "available";
     }
 
     // Lets the manager choose one Waiter task.
@@ -387,12 +492,14 @@ public class RestaurantUI {
         System.out.println(result.getMessage());
 
         if (result.isSuccess()) {
+            Order order = selected.getOrder();
+
             System.out.println(
                     "Bill: "
-                            + formatMoney(
-                                    selected.getOrder()
-                                            .getBillCents()
-                            )
+                            + formatMoney(order.getBillCents())
+                            + (order.isHappyHourPrice()
+                                    ? " (Happy Hour price)"
+                                    : "")
             );
         }
 
@@ -715,13 +822,13 @@ public class RestaurantUI {
         }
     }
 
-    // Formats integer cents as dollars.
     // Shows a customer with their type.
     private String describe(Customer customer) {
         return "Customer " + customer.getId()
                 + " (" + customer.getTypeName() + ")";
     }
 
+    // Formats integer cents as dollars.
     private String formatMoney(int cents) {
 
         return String.format(

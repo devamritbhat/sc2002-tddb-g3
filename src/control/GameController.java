@@ -6,6 +6,8 @@ import java.util.List;
 import domain.Cashier;
 import domain.Chef;
 import domain.Customer;
+import domain.HappyHour;
+import domain.Host;
 import domain.MenuItem;
 import domain.Order;
 import domain.Restaurant;
@@ -23,6 +25,7 @@ public class GameController {
     private final Restaurant restaurant;
 
     private final Waiter waiter;
+    private final Host host;
     private final Chef chef;
     private final Cashier cashier;
 
@@ -31,6 +34,7 @@ public class GameController {
     private int nextOrderId;
 
     private boolean waiterTaskUsed;
+    private boolean hostTaskUsed;
     private boolean chefTaskUsed;
 
     public GameController(GameConfig config) {
@@ -41,6 +45,7 @@ public class GameController {
                 new Restaurant(config.getTableCount());
 
         waiter = new Waiter();
+        host = new Host();
         chef = new Chef();
         cashier = new Cashier();
 
@@ -49,6 +54,7 @@ public class GameController {
         nextOrderId = 1;
 
         waiterTaskUsed = false;
+        hostTaskUsed = false;
         chefTaskUsed = false;
     }
 
@@ -80,8 +86,103 @@ public class GameController {
             currentTurn++;
 
             waiterTaskUsed = false;
+            hostTaskUsed = false;
             chefTaskUsed = false;
+
+            restaurant.getHappyHour().nextTurn();
         }
+    }
+
+    // Starts Happy Hour for this turn and the next. Only once per game.
+    public ActionResult activateHappyHour() {
+
+        HappyHour happyHour = restaurant.getHappyHour();
+
+        if (!happyHour.canActivate()) {
+            return ActionResult.failure(
+                    "Happy Hour has already been used."
+            );
+        }
+
+        happyHour.activate();
+
+        return ActionResult.success(
+                "Happy Hour is on for this turn and the next."
+        );
+    }
+
+    // At the start of an active turn, customers waiting for a table or food recover satisfaction.
+    public ActionResult processHappyHourRecovery() {
+
+        HappyHour happyHour = restaurant.getHappyHour();
+
+        if (!happyHour.isActive()) {
+            return ActionResult.failure(
+                    "Happy Hour is not active."
+            );
+        }
+
+        for (Customer customer :
+                restaurant.getCustomers()) {
+
+            CustomerStatus status =
+                    customer.getStatus();
+
+            if (status == CustomerStatus.WAITING
+                    || status == CustomerStatus.SEATED
+                    || status == CustomerStatus.ORDERED) {
+
+                customer.recoverSatisfaction(
+                        happyHour.getRecoveryPoints()
+                );
+            }
+        }
+
+        return ActionResult.success(
+                "Happy Hour: customers waiting for a table or food recover "
+                        + happyHour.getRecoveryPoints()
+                        + " satisfaction."
+        );
+    }
+
+    // The Host automatically seats the first waiting customer, once per turn.
+    public ActionResult processHost() {
+
+        if (hostTaskUsed) {
+            return ActionResult.failure(
+                    "Host has already seated a customer this turn."
+            );
+        }
+
+        Customer customer =
+                restaurant.getWaitingQueue().peek();
+
+        if (customer == null) {
+            return ActionResult.failure(
+                    "No customers are waiting for a table."
+            );
+        }
+
+        Table table = restaurant.findFreeTable();
+
+        if (table == null) {
+            return ActionResult.failure(
+                    "No free table is available."
+            );
+        }
+
+        ActionResult result =
+                host.seatCustomer(customer, table);
+
+        if (result.isSuccess()) {
+
+            restaurant.getWaitingQueue()
+                    .remove(customer);
+
+            hostTaskUsed = true;
+        }
+
+        return result;
     }
 
     // Creates a customer if one is scheduled to arrive.
@@ -177,7 +278,8 @@ public class GameController {
                 waiter.takeOrder(
                         customer,
                         item,
-                        nextOrderId
+                        nextOrderId,
+                        restaurant.getHappyHour()
                 );
 
         if (result.isSuccess()) {

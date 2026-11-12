@@ -32,10 +32,11 @@ public class Waiter {
         );
     }
 
-    // Takes an order from a seated customer.
+    // Takes an order from a seated customer. Happy Hour applies if it is active.
     public ActionResult takeOrder(Customer customer,
                                   MenuItem item,
-                                  int orderId) {
+                                  int orderId,
+                                  HappyHour happyHour) {
 
         if (customer == null || item == null) {
             return ActionResult.failure("Invalid customer or menu item.");
@@ -49,7 +50,7 @@ public class Waiter {
             return ActionResult.failure("Customer already has an order.");
         }
 
-        Order order = new Order(orderId, customer, item);
+        Order order = new Order(orderId, customer, item, happyHour);
 
         customer.setOrder(order);
         customer.setStatus(CustomerStatus.ORDERED);

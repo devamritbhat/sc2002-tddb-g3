@@ -14,6 +14,7 @@ public class Restaurant {
     private final List<Order> orders;
     private final Menu menu;
     private final GameStats stats;
+    private final HappyHour happyHour;
 
     public Restaurant(int tableCount) {
 
@@ -24,6 +25,7 @@ public class Restaurant {
 
         menu = new Menu();
         stats = new GameStats();
+        happyHour = new HappyHour();
 
         // Creates the required restaurant tables.
         for (int i = 1; i <= tableCount; i++) {
@@ -64,6 +66,10 @@ public class Restaurant {
 
     public GameStats getStats() {
         return stats;
+    }
+
+    public HappyHour getHappyHour() {
+        return happyHour;
     }
 
     // Finds the first available table.

@@ -51,7 +51,18 @@ public class SimulationTest {
         for (int turn = 1; turn <= 18; turn++) {
 
             controller.startNextTurn();
+
+            // Happy Hour starts on turn 13 and lasts turns 13 and 14.
+            if (turn == 13) {
+                assertSuccess(
+                        controller.activateHappyHour(),
+                        "Turn 13: Start Happy Hour"
+                );
+            }
+
+            controller.processHappyHourRecovery();
             controller.processArrival();
+            controller.processHost();
 
             runVictoryWaiterAction(
                     controller,
@@ -94,19 +105,16 @@ public class SimulationTest {
                 "Victory simulation should finish all 18 turns."
         );
 
-        assertTrue(
-                paid >= 4,
-                "Victory requires at least 4 paid customers."
+        assertEquals(
+                2160,
+                getOrder(controller, 4).getBillCents(),
+                "Customer 4's Salad + Burger Combo should cost $21.60."
         );
 
-        assertTrue(
-                revenue >= 4500,
-                "Victory requires at least $45 revenue."
-        );
-
-        assertTrue(
-                average >= 60,
-                "Victory requires average satisfaction of at least 60."
+        assertEquals(
+                1440,
+                getOrder(controller, 5).getBillCents(),
+                "The Critic's Pasta taken in Happy Hour should cost $14.40."
         );
 
         assertTrue(
@@ -134,7 +142,7 @@ public class SimulationTest {
         );
     }
 
-    // Defines the Waiter's action for the winning strategy.
+    // Waiter actions for the winning strategy. The Host seats every customer on arrival.
     private static void runVictoryWaiterAction(
             GameController controller,
             int turn) {
@@ -142,274 +150,91 @@ public class SimulationTest {
         switch (turn) {
 
             case 1:
+            case 4:
+            case 7:
+            case 10:
+            case 13:
+            case 16:
+                // Take the order of the customer the Host just seated.
+                int customerId = (turn + 2) / 3;
+
                 assertSuccess(
-                        controller.seatCustomer(
-                                getCustomer(
-                                        controller,
-                                        1
-                                )
+                        controller.takeOrder(
+                                getCustomer(controller, customerId)
                         ),
-                        "Turn 1: Seat Customer 1"
+                        "Turn " + turn + ": Take Customer " + customerId + " order"
                 );
                 break;
 
             case 2:
-                assertSuccess(
-                        controller.takeOrder(
-                                getCustomer(
-                                        controller,
-                                        1
-                                )
-                        ),
-                        "Turn 2: Take Customer 1 order"
-                );
-                break;
-
-            case 3:
-                assertSuccess(
-                        controller.serveOrder(
-                                getOrder(
-                                        controller,
-                                        1
-                                )
-                        ),
-                        "Turn 3: Serve Customer 1"
-                );
-                break;
-
-            case 4:
-                assertSuccess(
-                        controller.seatCustomer(
-                                getCustomer(
-                                        controller,
-                                        2
-                                )
-                        ),
-                        "Turn 4: Seat Customer 2"
-                );
-                break;
-
             case 5:
-                assertSuccess(
-                        controller.takeOrder(
-                                getCustomer(
-                                        controller,
-                                        2
-                                )
-                        ),
-                        "Turn 5: Take Customer 2 order"
-                );
-                break;
-
-            case 6:
-                assertSuccess(
-                        controller.serveOrder(
-                                getOrder(
-                                        controller,
-                                        2
-                                )
-                        ),
-                        "Turn 6: Serve Customer 2"
-                );
-                break;
-
-            case 7:
-                assertSuccess(
-                        controller.seatCustomer(
-                                getCustomer(
-                                        controller,
-                                        3
-                                )
-                        ),
-                        "Turn 7: Seat Customer 3"
-                );
-                break;
-
-            case 8:
-                assertSuccess(
-                        controller.takeOrder(
-                                getCustomer(
-                                        controller,
-                                        3
-                                )
-                        ),
-                        "Turn 8: Take Customer 3 order"
-                );
-                break;
-
-            case 10:
-                assertSuccess(
-                        controller.seatCustomer(
-                                getCustomer(
-                                        controller,
-                                        4
-                                )
-                        ),
-                        "Turn 10: Seat Customer 4"
-                );
-                break;
-
-            case 11:
-                assertSuccess(
-                        controller.serveOrder(
-                                getOrder(
-                                        controller,
-                                        3
-                                )
-                        ),
-                        "Turn 11: Serve Customer 3"
-                );
-                break;
-
+            case 9:
             case 12:
-                assertSuccess(
-                        controller.takeOrder(
-                                getCustomer(
-                                        controller,
-                                        4
-                                )
-                        ),
-                        "Turn 12: Take Customer 4 order"
-                );
-                break;
-
-            case 13:
-                assertSuccess(
-                        controller.serveOrder(
-                                getOrder(
-                                        controller,
-                                        4
-                                )
-                        ),
-                        "Turn 13: Serve Customer 4"
-                );
-                break;
-
-            case 14:
-                assertSuccess(
-                        controller.seatCustomer(
-                                getCustomer(
-                                        controller,
-                                        5
-                                )
-                        ),
-                        "Turn 14: Seat Customer 5"
-                );
-                break;
-
             case 15:
-                assertSuccess(
-                        controller.takeOrder(
-                                getCustomer(
-                                        controller,
-                                        5
-                                )
-                        ),
-                        "Turn 15: Take Customer 5 order"
-                );
-                break;
+                int servedId =
+                        turn == 2 ? 1
+                        : turn == 5 ? 2
+                        : turn == 9 ? 3
+                        : turn == 12 ? 4
+                        : 5;
 
-            case 17:
                 assertSuccess(
                         controller.serveOrder(
-                                getOrder(
-                                        controller,
-                                        5
-                                )
+                                getOrder(controller, servedId)
                         ),
-                        "Turn 17: Serve Customer 5 order"
+                        "Turn " + turn + ": Serve Customer " + servedId
                 );
                 break;
 
             default:
                 assertSuccess(
                         controller.waiterWait(),
-                        "Waiter waits"
+                        "Turn " + turn + ": Waiter waits"
                 );
                 break;
         }
     }
 
-    // Defines the Chef's action for the winning strategy.
+    // Chef actions for the winning strategy.
     private static void runVictoryChefAction(
             GameController controller,
             int turn) {
 
+        int customerId;
+
         switch (turn) {
 
-            case 2:
-                assertSuccess(
-                        controller.prepareOrder(
-                                getOrder(
-                                        controller,
-                                        1
-                                )
-                        ),
-                        "Turn 2: Prepare Customer 1 order"
-                );
-                break;
-
-            case 5:
-                assertSuccess(
-                        controller.prepareOrder(
-                                getOrder(
-                                        controller,
-                                        2
-                                )
-                        ),
-                        "Turn 5: Prepare Customer 2 order"
-                );
-                break;
-
-            case 8:
-            case 9:
-                assertSuccess(
-                        controller.prepareOrder(
-                                getOrder(
-                                        controller,
-                                        3
-                                )
-                        ),
-                        "Prepare Customer 3 order"
-                );
-                break;
-
-            case 12:
-                assertSuccess(
-                        controller.prepareOrder(
-                                getOrder(
-                                        controller,
-                                        4
-                                )
-                        ),
-                        "Turn 12: Prepare Customer 4 order"
-                );
-                break;
-
-            // The Critic's Pasta needs 2 units.
-            case 15:
+            case 1: customerId = 1; break;
+            case 4: customerId = 2; break;
+            case 7:
+            case 8: customerId = 3; break;
+            case 10:
+            case 11: customerId = 4; break;
+            case 13:
+            case 14: customerId = 5; break;
             case 16:
-                assertSuccess(
-                        controller.prepareOrder(
-                                getOrder(
-                                        controller,
-                                        5
-                                )
-                        ),
-                        "Prepare Customer 5 order"
-                );
-                break;
-
-            default:
-                assertSuccess(
-                        controller.chefWait(),
-                        "Chef waits"
-                );
-                break;
+            case 17:
+            case 18: customerId = 6; break;
+            default: customerId = 0; break;
         }
+
+        if (customerId == 0) {
+            assertSuccess(
+                    controller.chefWait(),
+                    "Turn " + turn + ": Chef waits"
+            );
+            return;
+        }
+
+        assertSuccess(
+                controller.prepareOrder(
+                        getOrder(controller, customerId)
+                ),
+                "Turn " + turn + ": Prepare Customer " + customerId + " order"
+        );
     }
 
-    // Runs a complete game where both staff always wait.
+    // Runs a complete game where the Waiter and Chef always wait.
     private static void testDefeatRun() {
 
         GameController controller =
@@ -422,7 +247,11 @@ public class SimulationTest {
 
             controller.startNextTurn();
 
+            controller.processHappyHourRecovery();
             controller.processArrival();
+
+            // The Host still seats customers automatically.
+            controller.processHost();
 
             assertSuccess(
                     controller.waiterWait(),

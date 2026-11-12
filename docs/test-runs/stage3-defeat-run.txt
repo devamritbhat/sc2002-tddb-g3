@@ -1,0 +1,22 @@
+
+=== DEFEAT RUN ===
+Turn  1 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  2 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  3 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  4 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  5 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  6 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  7 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  8 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn  9 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn 10 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn 11 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn 12 | Paid: 0 | Revenue: $0.00 | Departures: 0
+Turn 13 | Paid: 0 | Revenue: $0.00 | Departures: 1
+Turn 14 | Paid: 0 | Revenue: $0.00 | Departures: 1
+Turn 15 | Paid: 0 | Revenue: $0.00 | Departures: 1
+Turn 16 | Paid: 0 | Revenue: $0.00 | Departures: 1
+Turn 17 | Paid: 0 | Revenue: $0.00 | Departures: 1
+Turn 18 | Paid: 0 | Revenue: $0.00 | Departures: 1
+
+PASS: Full defeat simulation succeeded.

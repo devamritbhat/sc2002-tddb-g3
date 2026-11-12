@@ -70,6 +70,15 @@ public abstract class Customer {
         }
     }
 
+    // Recovers satisfaction during Happy Hour, up to 100.
+    public void recoverSatisfaction(int points) {
+        satisfaction += points;
+
+        if (satisfaction > 100) {
+            satisfaction = 100;
+        }
+    }
+
     public boolean hasLeft() {
         return status == CustomerStatus.LEFT;
     }

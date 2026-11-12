@@ -12,20 +12,32 @@ public class Order {
     private OrderStatus status;
     private int remainingPreparationUnits;
     private final int billCents;
+    private final boolean happyHourPrice;
 
     private int readyTurn;
     private int servedTurn;
     private int readyToPayTurn;
 
     public Order(int orderId, Customer customer, MenuItem item) {
+        this(orderId, customer, item, null);
+    }
+
+    public Order(int orderId, Customer customer, MenuItem item, HappyHour happyHour) {
         this.orderId = orderId;
         this.customer = customer;
         this.item = item;
 
         this.status = OrderStatus.PLACED;
         this.remainingPreparationUnits = item.getPreparationUnits();
-        // Bill is fixed when the order is taken.
-        this.billCents = customer.calculateBillCents(item.getPriceCents());
+        // Customer discount first, then Happy Hour. Bill is fixed when the order is taken.
+        int bill = customer.calculateBillCents(item.getPriceCents());
+        this.happyHourPrice = happyHour != null && happyHour.isActive();
+
+        if (happyHourPrice) {
+            bill = happyHour.applyDiscount(bill);
+        }
+
+        this.billCents = bill;
 
         this.readyTurn = -1;
         this.servedTurn = -1;
@@ -54,6 +66,10 @@ public class Order {
 
     public int getBillCents() {
         return billCents;
+    }
+
+    public boolean isHappyHourPrice() {
+        return happyHourPrice;
     }
 
     public int getReadyTurn() {

@@ -24,19 +24,19 @@ This README will be updated as the project evolves.
 
 The following areas indicate each member's primary responsibility for design review, implementation understanding, testing and presentation:
 
-| Member | Primary Area | Stage 2 |
-|---|---|---|
-| Devamrit | Overall architecture, `GameController`, game integration and lifecycle | Arrival types in `ArrivalSchedule` and `GameController` |
-| Evan | `Restaurant`, `WaitingQueue`, `Table`, Waiter, seating and serving | Customer type and bill display in `RestaurantUI`, class diagram update |
-| Hein | `Menu`, `MenuItem`, `Order`, Chef and food preparation | Critic's Pasta choice: `chooseItem()` and `Menu.findItem()` |
-| Keith | `Cashier`, `GameStats`, victory/defeat conditions and testing | VIP discount: `calculateBillCents()` and the bill in `Order`; Stage 2 tests and runs |
-| Saajid | `Customer`, `RegularCustomer`, satisfaction and abandonment | `VIPCustomer` and `CriticCustomer`: satisfaction loss and customer types |
+| Member | Primary Area | Stage 2 | Stage 3 |
+|---|---|---|---|
+| Devamrit | Overall architecture, `GameController`, game integration and lifecycle | Arrival types in `ArrivalSchedule` and `GameController` | Stage 3 turn flow in `GameController`: Host step, Happy Hour start, recovery and countdown |
+| Evan | `Restaurant`, `WaitingQueue`, `Table`, Waiter, seating and serving | Customer type and bill display in `RestaurantUI`, class diagram update | `Host` seating; Host, menu and Happy Hour display in `RestaurantUI`; class diagram update |
+| Hein | `Menu`, `MenuItem`, `Order`, Chef and food preparation | Critic's Pasta choice: `chooseItem()` and `Menu.findItem()` | `ComboMeal` and the six-choice menu in `Menu` |
+| Keith | `Cashier`, `GameStats`, victory/defeat conditions and testing | VIP discount: `calculateBillCents()` and the bill in `Order`; Stage 2 tests and runs | Happy Hour pricing in `Order` (VIP discount first, then 20% off); Stage 3 tests and runs |
+| Saajid | `Customer`, `RegularCustomer`, satisfaction and abandonment | `VIPCustomer` and `CriticCustomer`: satisfaction loss and customer types | `HappyHour` and `Customer.recoverSatisfaction()` |
 
 ---
 
 # Current Implementation
 
-The current version (Stage 2) implements the complete Restaurant Rush game with Regular, VIP and Critic customers and the three required menu items.
+The current version (Stage 3) implements the complete Restaurant Rush game with Regular, VIP and Critic customers, the Host, combo meals and Happy Hour.
 
 ## Features
 
@@ -45,6 +45,9 @@ The implementation includes:
 - 18-turn game
 - 2 restaurant tables
 - Regular, VIP and Critic customers
+- Host who seats one waiting customer per turn automatically
+- Three combo meals
+- Happy Hour, once per game
 - Scheduled customer arrivals
 - Waiting queue
 - Customer seating
@@ -69,18 +72,30 @@ The implementation includes:
 | Salad | $9.00 | 1 |
 | Burger | $15.00 | 1 |
 | Pasta | $18.00 | 2 |
+| Salad + Burger Combo | $21.60 | 2 |
+| Salad + Pasta Combo | $24.30 | 3 |
+| Burger + Pasta Combo | $29.70 | 3 |
 
-Customers choose their menu item automatically using a deterministic rule.
+A combo's preparation units are the sum of its two items. Its price is 90% of the two prices added together, rounded to the nearest cent.
+
+Customers choose their menu item automatically by customer ID, cycling through all six choices: Customer 1 Salad, 2 Burger, 3 Pasta, 4 Salad + Burger Combo, 5 Salad + Pasta Combo and 6 Burger + Pasta Combo. Critics always order Pasta.
 
 ### Customer Types
 
 | Type | Satisfaction loss per waiting turn | Bill | Food choice |
 |---|---:|---|---|
-| Regular | 8 | Full price | By customer ID |
-| VIP | 5 | 10% off | By customer ID |
+| Regular | 8 | Full price | By customer ID (six choices) |
+| VIP | 5 | 10% off | By customer ID (six choices) |
 | Critic | 12 | Full price | Always Pasta |
 
 Customer 2 (turn 4) is a VIP and Customer 5 (turn 13) is a Critic. The other four arrivals are Regular.
+
+### Happy Hour
+
+- The manager can start it once per game, at the start of a turn. It lasts that turn and the next.
+- Orders taken while it is on get 20% off, after the VIP discount. The bill is fixed when the order is taken.
+- At the start of each Happy Hour turn, customers still waiting for a table or food recover 15 satisfaction, up to 100.
+- The status shows whether it is available, active (with turns left) or used.
 
 ---
 
@@ -88,12 +103,16 @@ Customer 2 (turn 4) is a VIP and Customer 5 (turn 13) is a Critic. The other fou
 
 Each turn follows this sequence:
 
-1. Customer arrival, if scheduled
-2. Waiter action
-3. Chef action
-4. Eating progression and automatic Cashier payment
-5. Satisfaction loss and abandonment
-6. End-of-turn summary
+1. Happy Hour choice, while it is still available, and Happy Hour recovery if it is on
+2. Customer arrival, if scheduled
+3. Host seats the first waiting customer, if a table is free
+4. Waiter action
+5. Chef action
+6. Eating progression and automatic Cashier payment
+7. Satisfaction loss and abandonment
+8. End-of-turn summary
+
+The Host acts automatically and seats at most one customer per turn. The Waiter can still seat customers as well.
 
 The Waiter may perform at most one task per turn:
 
@@ -145,9 +164,12 @@ sc2002-tddb-g3/
 │   ├── domain/
 │   │   ├── Cashier.java
 │   │   ├── Chef.java
+│   │   ├── ComboMeal.java
 │   │   ├── CriticCustomer.java
 │   │   ├── Customer.java
 │   │   ├── GameStats.java
+│   │   ├── HappyHour.java
+│   │   ├── Host.java
 │   │   ├── Menu.java
 │   │   ├── MenuItem.java
 │   │   ├── Order.java
@@ -169,7 +191,8 @@ sc2002-tddb-g3/
 │
 ├── docs/
 │   ├── uml/
-│   │   └── class-diagram.png
+│   │   ├── class-diagram.png
+│   │   └── sequence-diagram.png
 │   │
 │   └── test-runs/
 │       ├── victory-run.txt
@@ -179,7 +202,11 @@ sc2002-tddb-g3/
 │       ├── stage2-victory-run.txt
 │       ├── stage2-victory-input.txt
 │       ├── stage2-defeat-run.txt
-│       └── stage2-defeat-input.txt
+│       ├── stage2-defeat-input.txt
+│       ├── stage3-victory-run.txt
+│       ├── stage3-victory-input.txt
+│       ├── stage3-defeat-run.txt
+│       └── stage3-defeat-input.txt
 │
 └── out/
 ```
@@ -241,6 +268,7 @@ These tests currently check:
 - Staff task limits
 - Cashier oldest-first rule
 - Stage 2 customer types: arrivals, VIP discount and Critic Pasta
+- Stage 3: combo prices, food choices, Host seating, and Happy Hour duration, pricing and recovery
 
 ## Run Full Game Simulations
 
@@ -341,7 +369,7 @@ docs/test-runs/defeat-run.txt
 
 ## Stage 2
 
-Customer 2 is a VIP and orders a Burger. Customer 5 is a Critic and orders Pasta.
+Recorded at tag `stage-2`. Customer 2 is a VIP and orders a Burger. Customer 5 is a Critic and orders Pasta. Run `git checkout stage-2` to reproduce them.
 
 ### Victory Run
 
@@ -414,10 +442,85 @@ Saved output:
 docs/test-runs/stage2-defeat-run.txt
 ```
 
+## Stage 3
+
+The Host seats every customer on the turn they arrive, so the Waiter can take their order straight away. Customers 4 and 6 order combos.
+
+### Victory Run
+
+| Turn | Host | Waiter | Chef |
+|---|---|---|---|
+| 1 | Seat Customer 1 | Take order from Customer 1 (Salad) | Prepare Order 1 |
+| 2 | — | Serve Order 1 | Wait |
+| 3 | — | Wait | Wait |
+| 4 | Seat Customer 2 (VIP) | Take order from Customer 2 (Burger) | Prepare Order 2 |
+| 5 | — | Serve Order 2 | Wait |
+| 6 | — | Wait | Wait |
+| 7 | Seat Customer 3 | Take order from Customer 3 (Pasta) | Prepare Order 3 |
+| 8 | — | Wait | Prepare Order 3 |
+| 9 | — | Serve Order 3 | Wait |
+| 10 | Seat Customer 4 | Take order from Customer 4 (Salad + Burger Combo) | Prepare Order 4 |
+| 11 | — | Wait | Prepare Order 4 |
+| 12 | — | Serve Order 4 | Wait |
+| 13 | Seat Customer 5 (Critic) | Take order from Customer 5 (Pasta) | Prepare Order 5 |
+| 14 | — | Wait | Prepare Order 5 |
+| 15 | — | Serve Order 5 | Wait |
+| 16 | Seat Customer 6 | Take order from Customer 6 (Burger + Pasta Combo) | Prepare Order 6 |
+| 17–18 | — | Wait | Prepare Order 6 |
+
+Happy Hour is started on turn 13 and lasts turns 13 and 14. The Critic's Pasta is ordered during Happy Hour and costs $14.40 instead of $18.00. At the start of turn 14, the Critic recovers from 88 to 100 satisfaction while waiting for the food. Customer 6's combo needs 3 units, so it only becomes READY on turn 18, too late to serve.
+
+Result: **VICTORY**
+
+```text
+Paid customers: 5          (target: at least 4)
+Revenue: $76.50            (target: at least $45)
+Average satisfaction: 88.60 (target: at least 60)
+Unhappy departures: 0
+```
+
+Reproduce:
+
+```bash
+java -cp out app.RestaurantRushApp < docs/test-runs/stage3-victory-input.txt
+```
+
+Saved output:
+
+```text
+docs/test-runs/stage3-victory-run.txt
+```
+
+### Defeat Run
+
+The Waiter and Chef wait every turn and Happy Hour is never started. The Host still seats Customers 1 and 2, but nobody is served. Customer 1 leaves after Turn 13, and the Host then seats Customer 3.
+
+Result: **DEFEAT**
+
+```text
+Paid customers: 0          (target: at least 4)
+Revenue: $0.00             (target: at least $45)
+Average satisfaction: N/A
+Unhappy departures: 1
+```
+
+Reproduce:
+
+```bash
+java -cp out app.RestaurantRushApp < docs/test-runs/stage3-defeat-input.txt
+```
+
+Saved output:
+
+```text
+docs/test-runs/stage3-defeat-run.txt
+```
+
 ## Input File Format
 
 Each line of an input file is one menu entry, in the order the game asks for them:
 
+- Happy Hour (asked at the start of each turn until it is used): `1` start, `2` not now
 - Waiter: `1` seat, `2` take order or `3` serve, followed by the customer ID or order ID; `4` wait
 - Chef: `1` prepare, followed by the order ID; `2` wait
 
@@ -454,6 +557,9 @@ Examples include:
 - `VIPCustomer`
 - `CriticCustomer`
 - `Order`
+- `ComboMeal`
+- `HappyHour`
+- `Host`
 - `Menu`
 - `MenuItem`
 - `Table`
@@ -526,7 +632,19 @@ The manager may then choose again without consuming the Waiter or Chef task for 
 
 Customers select their own menu item.
 
-Regular and VIP customers choose by customer ID so that runs are reproducible. Critics always order Pasta.
+Regular and VIP customers choose by customer ID so that runs are reproducible. In Stage 3 the rule cycles through all six menu choices, so Customers 4 and 6 order combos. Critics always order Pasta.
+
+## Host
+
+`Host` is a separate staff class. Each turn it seats the first customer in the waiting queue if a table is free. `GameController` makes sure it seats at most one customer per turn, and the Waiter can still seat customers.
+
+## Combo Meals
+
+`ComboMeal` extends `MenuItem`, so an order, the Chef and the bill work the same way for a combo as for a single item. The combo works out its own price and preparation units from its two items.
+
+## Happy Hour
+
+`HappyHour` is held by `Restaurant`. It keeps track of whether it has been used and how many turns are left. When an order is taken, `Order` applies the customer's discount first and then Happy Hour, each rounded to the nearest cent, so a VIP Burger costs $15.00 × 0.9 × 0.8 = $10.80. The bill does not change after that.
 
 ---
 
@@ -539,6 +657,12 @@ docs/uml/class-diagram.png
 ```
 
 The diagram is updated together with the code as the design evolves.
+
+The sequence diagram shows turns 13 to 18 of the Stage 3 victory run: the manager starts Happy Hour, the Critic (Customer 5) is seated by the Host, orders Pasta at the Happy Hour price, and is served and pays. It is stored in:
+
+```text
+docs/uml/sequence-diagram.png
+```
 
 ---
 
@@ -607,4 +731,21 @@ Little had to change because `Customer` was already abstract in Stage 1. The tur
 
 ## Stage 2 → Stage 3
 
-To be added when Stage 3 is implemented.
+Compare: https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-2...stage-3
+
+| Change | File | Reason |
+|---|---|---|
+| New | `Host.java` | The Host role, which seats one waiting customer per turn |
+| New | `ComboMeal.java` | A combo of two menu items: preparation units added, 90% of the price |
+| New | `HappyHour.java` | The Happy Hour policy: once per game, two turns, 20% off and +15 recovery |
+| Changed | `Menu.java` | Adds the three combos; customers now cycle through all six choices by ID |
+| Changed | `Order.java` | Applies Happy Hour after the customer's discount; the bill is still fixed when ordering |
+| Changed | `Waiter.java` | `takeOrder()` passes Happy Hour to the new order |
+| Changed | `Customer.java` | Added `recoverSatisfaction()` for Happy Hour |
+| Changed | `Restaurant.java` | Holds the `HappyHour` |
+| Changed | `GameController.java` | Host step, Happy Hour start, recovery and countdown |
+| Changed | `RestaurantUI.java` | Happy Hour choice and status, Host messages, menu at the start |
+| Changed | `GameTest.java`, `SimulationTest.java` | Stage 3 checks and new full-game runs |
+| New / Changed | `docs/` | Stage 3 test runs, updated class diagram and the sequence diagram |
+
+The turn sequence, staff classes, customer types and payment rules are unchanged. The only earlier rule that changed is the food choice: with six menu choices, Customers 4 and 6 now order combos, while Customers 1 to 3 and the Critic order the same as before. One Stage 2 check was updated for this (it now uses Customer 1). All other Stage 1 and Stage 2 tests still pass.

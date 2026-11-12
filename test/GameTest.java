@@ -3,7 +3,9 @@ import control.GameController;
 
 import domain.Cashier;
 import domain.CriticCustomer;
+import domain.ComboMeal;
 import domain.Customer;
+import domain.HappyHour;
 import domain.Menu;
 import domain.MenuItem;
 import domain.Order;
@@ -39,6 +41,14 @@ public class GameTest {
         testVIPCustomer();
         testCriticCustomer();
         testDiscountLockedWhenOrdered();
+
+        // Stage 3: Host, ComboMeal and Happy Hour.
+        testComboMeals();
+        testStage3FoodChoices();
+        testHostSeating();
+        testHappyHourDuration();
+        testHappyHourPricing();
+        testHappyHourRecovery();
 
         System.out.println();
         System.out.println("All tests passed.");
@@ -91,12 +101,12 @@ public class GameTest {
         Menu menu = new Menu();
 
         Customer customer =
-                new RegularCustomer(4, 10);
+                new RegularCustomer(1, 1);
 
         assertEquals(
                 "Salad",
                 customer.chooseItem(menu).getName(),
-                "Regular customer 4 should order Salad."
+                "Regular customer 1 should order Salad."
         );
 
         assertEquals(
@@ -909,6 +919,285 @@ public class GameTest {
         System.out.println(
                 "PASS: Cashier oldest-first rule works correctly."
         );
+    }
+
+    // Checks combo prices and preparation units.
+    private static void testComboMeals() {
+
+        Menu menu = new Menu();
+
+        assertEquals(
+                6,
+                menu.getItems().size(),
+                "Menu should have 3 items and 3 combos."
+        );
+
+        String[] names = {
+                "Salad + Burger Combo",
+                "Salad + Pasta Combo",
+                "Burger + Pasta Combo"
+        };
+        int[] prices = {2160, 2430, 2970};
+        int[] units = {2, 3, 3};
+
+        for (int i = 0; i < 3; i++) {
+
+            MenuItem combo = menu.getItem(3 + i);
+
+            assertTrue(
+                    combo instanceof ComboMeal,
+                    names[i] + " should be a ComboMeal."
+            );
+
+            assertEquals(names[i], combo.getName(), "Wrong combo name.");
+            assertEquals(prices[i], combo.getPriceCents(), names[i] + " has the wrong price.");
+            assertEquals(units[i], combo.getPreparationUnits(), names[i] + " has the wrong preparation units.");
+
+            assertEquals(
+                    2,
+                    ((ComboMeal) combo).getComponents().size(),
+                    "A combo should have two components."
+            );
+        }
+
+        System.out.println(
+                "PASS: Combo meals are correct."
+        );
+    }
+
+    // Checks that customers cycle through all six menu choices.
+    private static void testStage3FoodChoices() {
+
+        Menu menu = new Menu();
+
+        String[] expected = {
+                "Salad", "Burger", "Pasta",
+                "Salad + Burger Combo", "Salad + Pasta Combo", "Burger + Pasta Combo"
+        };
+
+        for (int id = 1; id <= 6; id++) {
+
+            assertEquals(
+                    expected[id - 1],
+                    new RegularCustomer(id, 1).chooseItem(menu).getName(),
+                    "Customer " + id + " chose the wrong item."
+            );
+        }
+
+        assertEquals(
+                "Pasta",
+                new CriticCustomer(5, 13).chooseItem(menu).getName(),
+                "The Critic should still order Pasta."
+        );
+
+        System.out.println(
+                "PASS: Stage 3 food choices are correct."
+        );
+    }
+
+    // Checks that the Host seats at most one customer per turn and the Waiter can still seat.
+    private static void testHostSeating() {
+
+        GameController controller =
+                new GameController(new GameConfig());
+
+        // Turns 1 to 4 with no seating, so Customers 1 and 2 are both waiting.
+        for (int turn = 1; turn <= 4; turn++) {
+            controller.startNextTurn();
+            controller.processArrival();
+        }
+
+        Customer first = getCustomer(controller, 1);
+        Customer second = getCustomer(controller, 2);
+
+        assertTrue(
+                controller.processHost().isSuccess(),
+                "Host should seat the first waiting customer."
+        );
+
+        assertEquals(
+                CustomerStatus.SEATED,
+                first.getStatus(),
+                "Host should seat Customer 1 first."
+        );
+
+        assertTrue(
+                !controller.processHost().isSuccess(),
+                "Host should seat at most one customer per turn."
+        );
+
+        assertTrue(
+                controller.seatCustomer(second).isSuccess(),
+                "Waiter should still be able to seat a customer."
+        );
+
+        controller.startNextTurn();
+
+        assertTrue(
+                !controller.processHost().isSuccess(),
+                "Host should not seat anyone without a waiting customer and a free table."
+        );
+
+        System.out.println(
+                "PASS: Host seating works correctly."
+        );
+    }
+
+    // Checks that Happy Hour lasts two turns and can only be used once.
+    private static void testHappyHourDuration() {
+
+        GameController controller =
+                new GameController(new GameConfig());
+
+        HappyHour happyHour =
+                controller.getRestaurant().getHappyHour();
+
+        controller.startNextTurn();
+
+        assertTrue(
+                controller.activateHappyHour().isSuccess(),
+                "Happy Hour should start."
+        );
+
+        assertEquals(2, happyHour.getRemainingTurns(), "Happy Hour should have 2 turns left.");
+
+        controller.startNextTurn();
+
+        assertTrue(happyHour.isActive(), "Happy Hour should still be active on the next turn.");
+        assertEquals(1, happyHour.getRemainingTurns(), "Happy Hour should have 1 turn left.");
+
+        controller.startNextTurn();
+
+        assertTrue(!happyHour.isActive(), "Happy Hour should end after two turns.");
+
+        assertTrue(
+                !controller.activateHappyHour().isSuccess(),
+                "Happy Hour can only be used once per game."
+        );
+
+        System.out.println(
+                "PASS: Happy Hour duration works correctly."
+        );
+    }
+
+    // Checks Happy Hour prices: VIP discount first, then 20% off, locked when ordered.
+    private static void testHappyHourPricing() {
+
+        Menu menu = new Menu();
+        MenuItem burger = menu.getItem(1);
+        MenuItem pasta = menu.getItem(2);
+        MenuItem saladPasta = menu.getItem(4);
+
+        HappyHour happyHour = new HappyHour();
+
+        Customer vip = new VIPCustomer(2, 4);
+        Customer regular = new RegularCustomer(3, 7);
+
+        // Ordered before Happy Hour starts.
+        Order before = new Order(1, regular, pasta, happyHour);
+
+        happyHour.activate();
+
+        Order vipBurger = new Order(2, vip, burger, happyHour);
+        Order regularPasta = new Order(3, regular, pasta, happyHour);
+        Order vipCombo = new Order(4, vip, saladPasta, happyHour);
+
+        assertEquals(1800, before.getBillCents(), "An order taken before Happy Hour keeps its price.");
+        assertEquals(1080, vipBurger.getBillCents(), "VIP Burger in Happy Hour should cost $10.80.");
+        assertEquals(1440, regularPasta.getBillCents(), "Regular Pasta in Happy Hour should cost $14.40.");
+        assertEquals(1750, vipCombo.getBillCents(), "VIP Salad + Pasta Combo in Happy Hour should cost $17.50.");
+
+        assertTrue(vipBurger.isHappyHourPrice(), "Order should be marked as a Happy Hour price.");
+        assertTrue(!before.isHappyHourPrice(), "Order before Happy Hour should not be marked.");
+
+        // Happy Hour ends: new orders are full price, earlier bills stay the same.
+        happyHour.nextTurn();
+        happyHour.nextTurn();
+
+        Order after = new Order(5, regular, pasta, happyHour);
+
+        assertEquals(1800, after.getBillCents(), "An order after Happy Hour is full price.");
+        assertEquals(1080, vipBurger.getBillCents(), "A Happy Hour bill stays locked.");
+
+        System.out.println(
+                "PASS: Happy Hour pricing works correctly."
+        );
+    }
+
+    // Checks that only customers waiting for a table or food recover, up to 100.
+    private static void testHappyHourRecovery() {
+
+        GameController controller =
+                new GameController(new GameConfig());
+
+        // Customer 1 waits for 3 turns: 100 - 24 = 76.
+        for (int turn = 1; turn <= 3; turn++) {
+            controller.startNextTurn();
+            controller.processArrival();
+            controller.processSatisfactionAndAbandonment();
+        }
+
+        Customer waiting = getCustomer(controller, 1);
+
+        assertEquals(76, waiting.getSatisfaction(), "Customer 1 should have 76 satisfaction.");
+
+        controller.startNextTurn();
+
+        assertTrue(
+                !controller.processHappyHourRecovery().isSuccess(),
+                "No recovery before Happy Hour starts."
+        );
+
+        controller.activateHappyHour();
+        controller.processHappyHourRecovery();
+
+        assertEquals(91, waiting.getSatisfaction(), "Waiting customer should recover 15.");
+
+        // Customer 2 arrives with 100 and stays at 100.
+        Customer vip = controller.processArrival();
+        controller.processHappyHourRecovery();
+
+        assertEquals(100, vip.getSatisfaction(), "Satisfaction should not go above 100.");
+
+        // A customer who has left does not recover.
+        GameController later =
+                new GameController(new GameConfig());
+
+        // Customer 1 waits until they leave after turn 13.
+        for (int turn = 1; turn <= 13; turn++) {
+            later.startNextTurn();
+            later.processArrival();
+            later.processSatisfactionAndAbandonment();
+        }
+
+        Customer left = getCustomer(later, 1);
+
+        later.startNextTurn();
+        later.activateHappyHour();
+        later.processHappyHourRecovery();
+
+        assertTrue(left.hasLeft(), "Customer 1 should have left.");
+        assertEquals(0, left.getSatisfaction(), "A customer who left should not recover.");
+
+        System.out.println(
+                "PASS: Happy Hour recovery works correctly."
+        );
+    }
+
+    // Finds a customer by ID.
+    private static Customer getCustomer(
+            GameController controller,
+            int id) {
+
+        for (Customer customer :
+                controller.getRestaurant().getCustomers()) {
+
+            if (customer.getId() == id) {
+                return customer;
+            }
+        }
+
+        throw new AssertionError("Customer " + id + " not found.");
     }
 
     // Creates one customer who has just been served.
