@@ -92,7 +92,7 @@ Each line contains the next menu choice requested by the game:
 ## UML Diagrams
 
 - [Class diagram](docs/uml/class-diagram.png)
-- [Sequence diagram](docs/uml/sequence-diagram.png) — Stage 3 victory run, turns 13–18
+- [Sequence diagram](docs/uml/sequence-diagram.png) (Stage 3 victory run, turns 13–18)
 
 ## Stage Transitions
 
