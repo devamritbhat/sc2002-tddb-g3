@@ -134,10 +134,10 @@ Video link: Add link
 
 |#|Segment                             |Presenter|Timestamp|
 |-|------------------------------------|---------|---------|
-|1|Launch the game                     |         |         |
-|2|Manager choices and staff limits    |         |         |
-|3|READY → SERVED → payment            |         |         |
-|4|VIP or Critic behaviour             |         |         |
-|5|Stage 3 feature                     |         |         |
-|6|Victory and defeat runs             |         |         |
-|7|Git tag comparisons and UML diagrams|         |         |
+|1|Game launching from the submitted project|Devamrit|         |
+|2|Manager choices with constrained staff|Evan|         |
+|3|Dish READY → SERVED → payment|Hein|         |
+|4|VIP and Critic behaviour|Saajid|         |
+|5|A Stage 3 feature, victory and defeat|Keith|         |
+|6|Stage tags, comparisons and class diagrams|Devamrit|         |
+|7|Use case and sequence diagram|Saajid|         |
