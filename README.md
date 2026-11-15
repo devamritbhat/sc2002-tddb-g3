@@ -130,14 +130,14 @@ Compare: https://github.com/devamritbhat/sc2002-tddb-g3/compare/stage-2...stage-
 
 ## Video
 
-Video link: Add link
+Video link: https://drive.google.com/file/d/1tJqsyPVPj-r9mpX0enZ8SSOVLzMqxdhc/view?usp=sharing
 
 |#|Segment                             |Presenter|Timestamp|
 |-|------------------------------------|---------|---------|
-|1|Game launching from the submitted project|Devamrit|         |
-|2|Manager choices with constrained staff|Evan|         |
-|3|Dish READY → SERVED → payment|Hein|         |
-|4|VIP and Critic behaviour|Saajid|         |
-|5|A Stage 3 feature, victory and defeat|Keith|         |
-|6|Stage tags, comparisons and class diagrams|Devamrit|         |
-|7|Use case and sequence diagram|Saajid|         |
+|1|Game launching from the submitted project|Devamrit|00:00|
+|2|Manager choices with constrained staff|Evan|01:32|
+|3|Dish READY → SERVED → payment|Hein|02:44|
+|4|VIP and Critic behaviour|Saajid|04:17|
+|5|A Stage 3 feature, victory and defeat|Keith|05:30|
+|6|Stage tags, comparisons and class diagrams|Devamrit|09:30|
+|7|Use case and sequence diagram|Saajid|11:55|
